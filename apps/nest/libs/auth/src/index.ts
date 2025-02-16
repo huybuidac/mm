@@ -1,3 +1,3 @@
 export * from './auth.module'
-export * from './dto/token.res.dto'
+export * from './dtos/token.res.dto'
 export * from './auth.service'

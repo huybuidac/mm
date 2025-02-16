@@ -1,7 +1,7 @@
 import { defaultValidatorPipe } from '@app/core'
 import { ExecutionContext, Injectable } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
-import { LoginDto } from '../dto/login.dto'
+import { LoginDto } from '../dtos/login.dto'
 
 @Injectable()
 export class LocalGuard extends AuthGuard('local') {

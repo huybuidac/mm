@@ -1,0 +1,17 @@
+{
+  "folders": [
+    {
+      "path": "apps/cdk",
+    },
+    {
+      "path": "apps/nest",
+    },
+    {
+      "path": "node_modules",
+    },
+  ],
+  "settings": {
+    "editor.formatOnSave": true,
+    "javascript.format.enable": true,
+  },
+}

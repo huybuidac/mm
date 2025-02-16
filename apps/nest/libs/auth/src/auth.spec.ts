@@ -1,8 +1,8 @@
 import { HttpStatus, INestApplication } from '@nestjs/common'
 import { PrismaService } from 'nestjs-prisma'
-import { RegisterDto } from './dto/register.dto'
+import { RegisterDto } from './dtos/register.dto'
 import { TestContext, testHelper, UserContextTestType } from '@app/spec/test.helper'
-import { LoginDto } from './dto/login.dto'
+import { LoginDto } from './dtos/login.dto'
 import { Hash } from '@app/helper/hash.helper'
 import { UserService } from '@app/user/user.service'
 import { proH } from '@app/helper'
@@ -19,7 +19,7 @@ describe('Auth', () => {
     prismaService = app.get(PrismaService)
   })
 
-  beforeAll(async () => {
+  afterAll(async () => {
     await tc?.clean()
   })
   describe('RegisterFailed', () => {

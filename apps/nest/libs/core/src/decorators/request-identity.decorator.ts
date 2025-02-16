@@ -38,5 +38,5 @@ export const RequestIdendity = createParamDecorator<any, any, RequestIdendity>(
       deviceModel: request.headers['device-model'] || parser.getDevice().model,
       deviceVendor: request.headers['device-vendor'] || parser.getDevice().vendor,
     }
-  }
+  },
 )

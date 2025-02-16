@@ -10,14 +10,14 @@ import {
 import { JwtService } from '@nestjs/jwt'
 import { User, UserProvider } from '@prisma/client'
 import { UserJwtPayload as UserJwtPayload } from './models/user.jwt.payload'
-import { TokenRefreshResDto, TokenResDto } from './dto/token.res.dto'
-import { RegisterDto } from './dto/register.dto'
+import { TokenRefreshResDto, TokenResDto } from './dtos/token.res.dto'
+import { RegisterDto } from './dtos/register.dto'
 import { ProvidersRegisterService, SocialProviderType } from './services/providers-register.service'
 import { ProfileService } from '@app/profile'
 import { MailerService } from '@app/mailer'
-import { ConfirmDto } from './dto/confirm.dto'
-import { ResetPasswordDto } from './dto/reset-password.dto'
-import { ConfirmResetPasswordDto } from './dto/confirm.reset-password.dto'
+import { ConfirmDto } from './dtos/confirm.dto'
+import { ResetPasswordDto } from './dtos/reset-password.dto'
+import { ConfirmResetPasswordDto } from './dtos/confirm.reset-password.dto'
 import { Request } from 'express'
 import { PrismaService } from 'nestjs-prisma'
 import { UserEntity } from '@app/user/entities/user.entity'
@@ -50,7 +50,7 @@ export class AuthService {
     const user = await this._userService.findLocalUserByVerifyCode(dto.code, {
       advantage: true,
     })
-    let message = 'Frnzy Mail Confirmation Successfully, Please open mobile app to continue use'
+    let message = 'Nestjs Boilerplate Mail Confirmation Successfully, Please open mobile app to continue use'
     try {
       if (!user) throw new BadRequestException('Invalid code')
       if (user.confirmed) throw new BadRequestException('confirmed')
@@ -77,7 +77,7 @@ export class AuthService {
     return `
 <!DOCTYPE html>
 <html>
-<title>Frnzy Mail Confirmation</title>
+<title>Nestjs Boilerplate Mail Confirmation</title>
 <body>
 
 <h1>${message}</h1>
@@ -199,7 +199,7 @@ export class AuthService {
       password: passwordHash,
       verifyCode,
       verifyCreatedAt: new Date(),
-      confirmed: initSpa ? true : false, // TODO send mail to confirm
+      confirmed: true, // initSpa ? true : false, // TODO send mail to confirm
       provider: UserProvider.LOCAL,
       role: 'USER',
       lastLoginAt: new Date(),

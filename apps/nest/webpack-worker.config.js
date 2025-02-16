@@ -36,7 +36,7 @@ module.exports = (options, webpack) => {
     plugins: [
       ...options.plugins,
       new webpack.IgnorePlugin({
-        checkResource(resource) {
+        checkResource (resource) {
           // console.log(resource)
           if (lazyImports.includes(resource)) {
             try {

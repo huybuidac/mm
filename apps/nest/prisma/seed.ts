@@ -3,10 +3,7 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 async function main() {
-  console.log({
-    SUPER_ADMIN_USERNAME: process.env.SUPER_ADMIN_USERNAME,
-    SUPER_ADMIN_PASSWORD: process.env.SUPER_ADMIN_PASSWORD,
-  })
+  console.log('PRISMA DATABASE SEEDING...')
   if (process.env.SUPER_ADMIN_USERNAME && process.env.SUPER_ADMIN_PASSWORD) {
     const x = await prisma.user.create({
       data: {
@@ -22,7 +19,7 @@ async function main() {
         },
       },
     })
-    console.log({ x })
+    console.log('SUPER-ADMIN created')
   }
 }
 

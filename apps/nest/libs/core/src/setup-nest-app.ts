@@ -5,6 +5,9 @@ import { AllExceptionsFilter } from './filters/all-exception-filter'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { Handler } from 'express'
 import serverlessExpress from '@vendia/serverless-express'
+import { preboot } from '@app/helper/pre-boot'
+
+preboot()
 
 export async function setupNestApp(app: INestApplication) {
   app.useGlobalPipes(
@@ -25,8 +28,8 @@ let globalPrefix = ''
 export async function setupSwaggerUI(app: INestApplication, options?: { route?: string; metadata?: any }) {
   const { route = 'docs', metadata } = options || {}
   const config = new DocumentBuilder()
-    .setTitle('Median')
-    .setDescription('The Median API description')
+    .setTitle('Nestjs Boilerplate')
+    .setDescription('The Nestjs Boilerplate API description')
     .setVersion('0.1')
     .addBearerAuth()
     .setExternalDoc('Postman Collection', `${globalPrefix}/docs-json`)
@@ -40,7 +43,7 @@ export async function setupSwaggerUI(app: INestApplication, options?: { route?: 
   SwaggerModule.setup(route, app, documentFactory, { useGlobalPrefix: true })
 }
 
-export async function bootstrapServerless(modular, routePrefix): Promise<Handler> {
+export async function bootstrapServerless(modular, routePrefix = ''): Promise<Handler> {
   // console.log('bootstrapServerless start', pingDb, new Date().toISOString())
   app = await NestFactory.create(modular, {
     logger: [
@@ -54,7 +57,7 @@ export async function bootstrapServerless(modular, routePrefix): Promise<Handler
   setupNestApp(app)
   globalPrefix = routePrefix
   app.setGlobalPrefix(globalPrefix)
-  // setupSwaggerUI(app, 'docs')
+  setupSwaggerUI(app)
   await app.init()
 
   const expressApp = app.getHttpAdapter().getInstance()

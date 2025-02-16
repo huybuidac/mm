@@ -60,6 +60,12 @@
       ],
       "@app/helper/*": [
         "libs/helper/src/*"
+      ],
+      "@app/todo": [
+        "libs/todo/src"
+      ],
+      "@app/todo/*": [
+        "libs/todo/src/*"
       ]
     }
   }

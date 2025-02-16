@@ -9,18 +9,6 @@ export class ProfileEntity implements Profile {
   dob: Date | null
 
   @Expose()
-  @ApiProperty({ type: () => Date })
-  readNotiAt: Date
-
-  @Expose()
-  @ApiProperty({ type: () => 'bigint' })
-  channelId: bigint
-
-  @Expose()
-  @ApiProperty({ type: () => String })
-  accountName: string
-
-  @Expose()
   @ApiProperty({ type: () => Role, enum: Role })
   role: Role
 
@@ -37,7 +25,7 @@ export class ProfileEntity implements Profile {
   updatedAt: Date
 
   @Expose()
-  @ApiProperty({ example: 999, type: () => 'bigint' })
+  @ApiProperty({ example: 999 })
   id: bigint
 
   @Expose()

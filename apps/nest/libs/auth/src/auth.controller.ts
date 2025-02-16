@@ -16,18 +16,18 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger'
 import { AuthService } from './auth.service'
-import { TokenRefreshResDto, TokenResDto } from './dto/token.res.dto'
-import { LoginDto } from './dto/login.dto'
-import { RegisterDto } from './dto/register.dto'
+import { TokenRefreshResDto, TokenResDto } from './dtos/token.res.dto'
+import { LoginDto } from './dtos/login.dto'
+import { RegisterDto } from './dtos/register.dto'
 import { JwtGuard } from './guards/jwt.guard'
 import { LocalGuard } from './guards/local.guard'
 import { SocialProviderType as SocialProviderType } from './services/providers-register.service'
 import { JwtRefreshGuard } from './guards/jwt.refresh.guard'
 import { ExcludeProfile } from '@app/core/decorators/exclude-profile.decorator'
-import { ConfirmDto } from './dto/confirm.dto'
+import { ConfirmDto } from './dtos/confirm.dto'
 import { ExcludeConfirm } from '@app/core/decorators/exclude-confirm.decorator'
-import { ResetPasswordDto } from './dto/reset-password.dto'
-import { ConfirmResetPasswordDto } from './dto/confirm.reset-password.dto'
+import { ResetPasswordDto } from './dtos/reset-password.dto'
+import { ConfirmResetPasswordDto } from './dtos/confirm.reset-password.dto'
 import { Request } from 'express'
 
 @ApiTags('auth')
@@ -36,7 +36,7 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @UseGuards(LocalGuard)
-  @ApiCreatedResponse({ type: TokenResDto })
+  @ApiCreatedResponse({ type: () => TokenResDto })
   @Post('local')
   @HttpCode(HttpStatus.OK)
   // DO NOT DELETE userLoginDto due to swagger

@@ -15,6 +15,9 @@
       }
     ]
   },
+  "generatorOptions": {
+    "spec": false
+  },
   "monorepo": true,
   "root": "apps/api",
   "projects": {
@@ -88,6 +91,15 @@
       "sourceRoot": "libs/helper/src",
       "compilerOptions": {
         "tsConfigPath": "libs/helper/tsconfig.lib.json"
+      }
+    },
+    "todo": {
+      "type": "library",
+      "root": "libs/todo",
+      "entryFile": "index",
+      "sourceRoot": "libs/todo/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/todo/tsconfig.lib.json"
       }
     }
   }

@@ -10,9 +10,9 @@ export class AllExceptionsFilter extends BaseExceptionFilter {
     try {
       const request = host.switchToHttp()?.getRequest<Request>()
       if (request) {
-        if (exception?.code === 'P2025' && exception?.name === 'NotFoundError') {
+        if (exception?.code === 'P2025') {
           // fallback prisma NotFoundError to nestjs NotFoundException
-          exception = new NotFoundException(exception?.message)
+          exception = new NotFoundException()
         }
 
         let status, message

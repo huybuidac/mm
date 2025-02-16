@@ -5,7 +5,7 @@ import { UserEntity } from '@app/user/entities/user.entity'
 import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger'
 import { ProfileEntity } from './entities/profile.entity'
 import { JwtGuard } from '@app/auth/guards/jwt.guard'
-import { ProfileUpdateDto } from './dto/profile.update.dto'
+import { ProfileUpdateDto } from './dtos/profile.update.dto'
 import { ParseJsonPipe } from '@app/core/pipes/parse-json.pipe'
 import { ParseBigIntPipe } from '@app/core/pipes/parse-bigint.pipe'
 

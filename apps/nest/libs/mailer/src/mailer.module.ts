@@ -11,5 +11,6 @@ import { MailerMockService } from './services/mailer.service.mock'
     },
   ],
   exports: [MailerService],
+  imports: [],
 })
 export class MailerModule {}

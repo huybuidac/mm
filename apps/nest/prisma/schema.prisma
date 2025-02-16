@@ -5,8 +5,8 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
-  binaryTargets   = ["native", "rhel-openssl-3.0.x"]
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
@@ -58,14 +58,35 @@ enum Role {
 model Profile {
   id BigInt @id @default(autoincrement())
 
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  dob        DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  dob       DateTime?
 
-  name        String
-  avatar      String?
-  email       String?
+  name   String
+  avatar String?
+  email  String?
 
   // relations
-  users                User[]
+  users User[]
+  todos Todo[]
+}
+
+enum TodoStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+model Todo {
+  id BigInt @id @default(autoincrement())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  title       String
+  description String?
+  status      TodoStatus @default(TODO)
+
+  profileId BigInt
+  profile   Profile @relation(fields: [profileId], references: [id])
 }

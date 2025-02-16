@@ -1,5 +1,5 @@
 import { AuthModule } from '@app/auth'
-import { TokenResDto } from '@app/auth/dto/token.res.dto'
+import { TokenResDto } from '@app/auth/dtos/token.res.dto'
 import { setupNestApp } from '@app/core/setup-nest-app'
 import { ProfileModule } from '@app/profile'
 import { UserModule } from '@app/user'
@@ -22,12 +22,14 @@ function buildExpectStatus(res: request.Response, expectedStatus: HttpStatus) {
   }
 }
 
-const toBeBad = (res: request.Response, message: string) => {
-  const pass = res.statusCode == HttpStatus.BAD_REQUEST && message == res.body.message
+const toBeBad = (res: request.Response, message?: string | RegExp) => {
+  const pass =
+    res.statusCode == HttpStatus.BAD_REQUEST &&
+    (!message || typeof message == 'string' ? message == res.body.message : message.test(res.body.message))
   let error = ''
   if (res.statusCode != HttpStatus.BAD_REQUEST) {
     error = `expected ${res.statusCode} to be ${HttpStatus.BAD_REQUEST}, `
-  } else if (message != res.body.message) {
+  } else if (!!message) {
     error = `expected ${res.body.message} to be ${message}, `
   }
   return {
@@ -51,7 +53,7 @@ declare global {
       toBeOK(): R
       toBeCreated(): R
       toBe404(): R
-      toBeBad(message: string): R
+      toBeBad(message: string | RegExp): R
       toBeUnauthorized(): R
     }
   }
