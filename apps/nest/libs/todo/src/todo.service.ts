@@ -12,7 +12,6 @@ export class TodoService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getTodos(queryTodoDto: QueryTodoDto) {
-    console.log('getTodos', queryTodoDto)
     const { select, include } = queryTodoDto
     const todos = await this.prisma.todo.findMany({
       where: queryTodoDto.where,

@@ -52,7 +52,7 @@ describe('TodoSpec', () => {
       const paramDto = {
         where: {
           id: {
-            gt: 3,
+            gt: 0,
           },
           title: {
             startsWith: 'Test',

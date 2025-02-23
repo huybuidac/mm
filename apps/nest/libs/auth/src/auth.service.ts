@@ -199,7 +199,7 @@ export class AuthService {
       password: passwordHash,
       verifyCode,
       verifyCreatedAt: new Date(),
-      confirmed: true, // initSpa ? true : false, // TODO send mail to confirm
+      confirmed: process.env.ENV !== 'spec', // TODO send mail to confirm
       provider: UserProvider.LOCAL,
       role: 'USER',
       lastLoginAt: new Date(),
