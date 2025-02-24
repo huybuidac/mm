@@ -5,7 +5,19 @@ const prisma = new PrismaClient()
 async function main() {
   console.log('PRISMA DATABASE SEEDING...')
   if (process.env.SUPER_ADMIN_USERNAME && process.env.SUPER_ADMIN_PASSWORD) {
-    const x = await prisma.user.create({
+    const admin = await prisma.user.findUnique({
+      where: {
+        username_provider: {
+          username: process.env.SUPER_ADMIN_USERNAME,
+          provider: 'LOCAL',
+        },
+      },
+    })
+    if (admin) {
+      console.log('SUPER-ADMIN already exists')
+      return
+    }
+    await prisma.user.create({
       data: {
         username: process.env.SUPER_ADMIN_USERNAME,
         password: Hash.make(process.env.SUPER_ADMIN_PASSWORD),

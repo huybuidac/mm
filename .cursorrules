@@ -135,7 +135,7 @@ export class TodoEntity {
 - The class-validator and class-transformer decorators will be lost if overridden in a class. Therefore, we must define all decorators in the DTO, even if they are already defined in the base class.
 - Create Entity DTO:
   - Convention: create-entity-name.dto.ts
-  - Use PickType to select the properties from the entity.
+  - No need profileId field.
   - Include validation decorators.
   - Include ApiProperty decorators.
   - No need to add Expose decorator.
@@ -326,6 +326,7 @@ export class TodoController {
 ### Services
 
 - Let reference the following example:
+  - "create", "update", "delete" functions include user parameter
 
 ```typescript
 import { Injectable } from '@nestjs/common'
