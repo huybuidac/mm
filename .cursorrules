@@ -177,6 +177,7 @@ export class UpdateTodoDto extends PartialType(_UpdateTodoDto) {}
 
 - Query Entity DTO:
   - Convention: query-entity-name.dto.ts
+  - Number fields should be annotated with @Type(() => Number)
   - Let reference the following example:
 
 ```typescript
