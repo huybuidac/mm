@@ -6,6 +6,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { Handler } from 'express'
 import serverlessExpress from '@vendia/serverless-express'
 import { preboot } from '@app/helper/pre-boot'
+import { AppClassSerializerInterceptor } from './interceptors/app-class-serializer.interceptor'
 
 preboot()
 
@@ -14,7 +15,10 @@ export async function setupNestApp(app: INestApplication) {
     new ValidationPipe({ transform: true, transformOptions: { strategy: 'excludeAll', exposeUnsetFields: false } }),
   )
   app.useGlobalInterceptors(
-    new ClassSerializerInterceptor(app.get(Reflector), { strategy: 'excludeAll', exposeUnsetFields: false }),
+    new AppClassSerializerInterceptor(app.get(HttpAdapterHost), app.get(Reflector), {
+      strategy: 'excludeAll',
+      exposeUnsetFields: false,
+    }),
   )
 
   const { httpAdapter } = app.get(HttpAdapterHost)
