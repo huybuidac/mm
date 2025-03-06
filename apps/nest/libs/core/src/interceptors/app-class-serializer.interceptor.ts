@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common'
 import { HttpAdapterHost, Reflector } from '@nestjs/core'
 import { Observable, map } from 'rxjs'
+import { TRANSFORMER_EXPOSE_ALL_KEY } from '../decorators/transformer-expose-all.decorator'
 
 const REFLECTOR = 'Reflector'
 
@@ -33,6 +34,9 @@ export class AppClassSerializerInterceptor extends ClassSerializerInterceptor {
     const options = {
       ...this.defaultOptions,
       ...contextOptions,
+    }
+    if (this.reflector.get(TRANSFORMER_EXPOSE_ALL_KEY, context.getHandler())) {
+      options.strategy = 'exposeAll'
     }
     return next.handle().pipe(
       map((res: PlainLiteralObject | Array<PlainLiteralObject>) => {
