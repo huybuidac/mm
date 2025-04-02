@@ -29,3 +29,9 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+
+# dotenv environment variable files
+**/.env
+**/.env.*
+**/.env.sample
+**/.env.*.sample
