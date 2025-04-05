@@ -2,23 +2,10 @@ import { ParseBigIntPipe } from '@app/core/pipes/parse-bigint.pipe'
 import { CreateTodoDto } from './dtos/create-todo.dto'
 import { TodoService } from './todo.service'
 
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Post,
-  Put,
-  Query,
-  UseGuards,
-  UseInterceptors,
-  UsePipes,
-  ValidationPipe,
-} from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards, UseInterceptors } from '@nestjs/common'
 import { UpdateTodoDto } from './dtos/update-todo.dto'
 import { QueryTodoDto } from './dtos/query-todo.dto'
-import { ApiBearerAuth, ApiOkResponse } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger'
 import { JwtGuard } from '@app/auth/guards/jwt.guard'
 import { TodoEntity } from './entities/todo.entity'
 import { CacheTTL } from '@nestjs/cache-manager'
@@ -29,6 +16,7 @@ import { User } from '@prisma/client'
 import { RawQuery } from '@app/core/decorators/query.decorator'
 
 @Controller('todo')
+@ApiTags('Todo')
 export class TodoController {
   constructor(private readonly todoService: TodoService) {}
 

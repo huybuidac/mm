@@ -138,7 +138,6 @@ export class TodoEntity {
   - No need profileId field.
   - Include validation decorators.
   - Include ApiProperty decorators.
-  - No need to add Expose decorator.
   - Let reference the following example:
 
 ```typescript
@@ -163,8 +162,8 @@ export class CreateTodoDto {
 
 - Update Entity DTO:
   - Convention: edit-entity-name.dto.ts
-  - In most cases, we just need to use PartialType(CreateXXXDto).
-  - In complex cases, we can use OmitType or override validation decorators.
+  - Pick the fields that can be updated from CreateXXXDto to _UpdateXXXDto via PickType.
+  - Use PartialType to make the fields optional.
   - Let reference the following example:
 
 ```typescript

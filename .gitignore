@@ -35,3 +35,6 @@ yarn-error.log*
 **/.env.*
 **/.env.sample
 **/.env.*.sample
+
+# Private individual user cursor rules
+.cursor/rules/_*.mdc

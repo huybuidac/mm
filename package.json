@@ -15,9 +15,5 @@
   "packageManager": "pnpm@9.0.0",
   "engines": {
     "node": ">=18"
-  },
-  "dependencies": {
-    "aws-cdk": "^2.177.0",
-    "global": "^4.4.0"
   }
 }
