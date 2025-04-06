@@ -4,6 +4,7 @@ import { Duration } from 'aws-cdk-lib'
 import { BaseFunction } from './_function-base'
 import { CdkStack } from '../cdk-stack'
 import { IConfig } from '../../bin/config'
+import { WarmupLambda } from './warmup/warmup-lambda'
 
 export class ApiFunction extends BaseFunction {
   constructor(scope: CdkStack, id: string, config: IConfig) {
@@ -22,6 +23,12 @@ export class ApiFunction extends BaseFunction {
       environment: {
         ...scope.commonEnvs,
       },
+    })
+
+    // Add warmup configuration
+    new WarmupLambda(this, `${this.function.functionName}-warmup`, {
+      function: this.function,
+      concurrency: config.env === 'prd' ? 10 : 1,
     })
   }
 }
