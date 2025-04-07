@@ -20,7 +20,7 @@
 - [x] Authentication system
 
 ### Documentation
-- [x] Project README
+- [ ] Project README
 - [x] Memory bank initialization
 - [x] Development guidelines
 - [x] Project structure documentation
