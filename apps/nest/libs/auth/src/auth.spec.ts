@@ -114,14 +114,16 @@ describe('Auth', () => {
       const res = await userContext.request((r) => r.post('/auth/local/resend-confirm'))
       expect(res).toBeOK()
     })
-    test.skip('Confirm:Expired', async () => {
-      await proH.delay(2000)
+    test('Confirm:Expired', async () => {
+      jest.useFakeTimers({ doNotFake: ['nextTick'] })
+      jest.advanceTimersByTime(3600000)
       const user = await prismaService.user.findUnique({
         where: { id: userContext.userInfo.user.id },
       })
       const res = await userContext.request((r) => r.get('/auth/local/confirm')).query({ code: user.verifyCode })
       expect(res.statusCode).toBe(HttpStatus.BAD_REQUEST)
       expect(res.body.message).toBe('Code is expired')
+      jest.useRealTimers()
     })
     test('Confirm:OK', async () => {
       let res = await userContext.request((r) => r.post('/auth/local/resend-confirm'))
@@ -138,8 +140,8 @@ describe('Auth', () => {
       expect(user.id).not.toBeUndefined()
       expect(user.password).toBeUndefined()
     })
-    test.skip('Token Expired', async () => {
-      jest.useFakeTimers()
+    test('Token Expired', async () => {
+      jest.useFakeTimers({ doNotFake: ['nextTick'] })
       jest.setSystemTime(new Date(Date.now() + 24 * 60 * 60 * 1000))
       await userContext.request((r) => r.get('/auth/me')).expect(HttpStatus.UNAUTHORIZED)
       const res = await userContext
