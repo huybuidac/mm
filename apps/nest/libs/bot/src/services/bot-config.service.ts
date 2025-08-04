@@ -6,6 +6,7 @@ import { CreateBotTokenWalletsDto } from '../dtos/create-bot-token-wallets.dto'
 import { BotTokenEntity } from '../entities/bot-token.entity'
 import { BotTokenWalletEntity } from '../entities/bot-token-wallet.entity'
 import { PrismaService } from 'nestjs-prisma'
+import { uniqBy } from 'lodash'
 
 @Injectable()
 export class BotConfigService {
@@ -31,25 +32,28 @@ export class BotConfigService {
       ...wallet,
     }))
 
-    await this.prisma.botWallet.createMany({
-      data: wallets.map((wallet) => ({
-        address: wallet.address,
-        privateKey: wallet.privateKey,
-      })),
-      skipDuplicates: true,
+    const results = await this.prisma.$transaction(async (tx) => {
+      await tx.botTokenWallet.deleteMany({
+        where: { tokenAddress: dto.tokenAddress },
+      })
+      await tx.botWallet.createMany({
+        data: wallets.map((wallet) => ({
+          address: wallet.address,
+          privateKey: wallet.privateKey,
+        })),
+        skipDuplicates: true,
+      })
+      return await tx.botTokenWallet.createManyAndReturn({
+        data: wallets.map((wallet) => ({
+          walletAddress: wallet.address,
+          tokenAddress: dto.tokenAddress,
+          buyable: wallet.buyable,
+          sellable: wallet.sellable,
+          priority: wallet.priority,
+        })),
+      })
     })
-    const results = await this.prisma.botTokenWallet.createManyAndReturn({
-      data: wallets.map((wallet) => ({
-        walletAddress: wallet.address,
-        tokenAddress: dto.tokenAddress,
-        buyable: wallet.buyable,
-        sellable: wallet.sellable,
-      })),
-      skipDuplicates: true,
-      include: {
-        wallet: true,
-      },
-    })
+
     return th.toInstancesSafe(BotTokenWalletEntity, results)
   }
 }

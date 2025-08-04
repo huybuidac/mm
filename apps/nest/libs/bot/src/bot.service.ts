@@ -1,13 +1,15 @@
 import { Injectable } from '@nestjs/common'
 import { DateTime, Duration } from 'luxon'
 import { ethers, formatUnits } from 'ethers'
-import { get, keyBy, maxBy, omit, random, set, unionBy, uniq, uniqBy } from 'lodash'
+import { get, keyBy, maxBy, omit, pick, random, set, unionBy, uniq, uniqBy } from 'lodash'
 import { MulticallWrapper } from 'ethers-multicall-provider'
-import { getProvider } from './config'
+import { ChainConfigs, getProvider } from './config'
 import { Erc20__factory } from './contracts'
 import { proH } from '@app/helper'
-import { swapLib } from './libs/swap.lib'
+import { ParsedSwapEventType, swapLib } from './libs/swap.lib'
 import { logl } from '@app/helper/log.helper'
+import { PrismaService } from 'nestjs-prisma'
+import randomstring from 'randomstring'
 
 interface WalletState {
   wallet: ethers.Wallet
@@ -16,6 +18,7 @@ interface WalletState {
   tokenBalance: bigint
   buyable: boolean
   sellable: boolean
+  priority: boolean
   buyWeight: number
   sellWeight: number
 }
@@ -35,14 +38,15 @@ interface StartOptions {
     volume: bigint
     totalOrder: bigint
   }
+  priorityAddresses: string[]
   duration: Duration
 }
-
-let globalJobId = 0
 
 @Injectable()
 export class BotService {
   jobs = {}
+
+  constructor(private readonly prisma: PrismaService) {}
 
   async stopTokenJob(token: string) {
     const jobId = get(this.jobs, [token])
@@ -55,7 +59,7 @@ export class BotService {
   }
 
   async start(options: StartOptions) {
-    const jobId = globalJobId++
+    const jobId = randomstring.generate(7)
     const { token, chainId, sellConfig, buyConfig, duration, fee } = options
     const { getBuyWallets, getSellWallets } = await prepareForStart(options)
 
@@ -91,7 +95,7 @@ export class BotService {
             logl(
               `[${jobId}][Buy-${buyConfig.totalOrder}][${randomWallet.wallet.address}] Buy with ${formatUnits(ethAmount, 18)} eth`,
             )
-            const tokenOut = await swapLib.buy({
+            const swapEvent = await swapLib.buy({
               runner: randomWallet.wallet,
               token,
               ethAmount,
@@ -101,10 +105,12 @@ export class BotService {
             logl(
               `[${jobId}][Buy-${buyConfig.totalOrder}][${randomWallet.wallet.address}] Buy success with ${formatUnits(ethAmount, 18)} eth`,
             )
-            randomWallet.ethBalance -= ethAmount
-            randomWallet.tokenBalance += tokenOut
+            randomWallet.ethBalance -= swapEvent.ethAmount
+            randomWallet.tokenBalance += swapEvent.tokenAmount
             buyConfig.totalOrder -= 1n
             buyConfig.volume -= ethAmount
+
+            await this.storeSwapEvent({ swapEvent, token, chainId })
 
             const currentTime = DateTime.now()
             if (currentTime < endTime && buyConfig.totalOrder > 0) {
@@ -138,15 +144,13 @@ export class BotService {
           try {
             const randomWallet = getRandomWallet(validWallets)
             const swapType = random(1, 2)
-            let tokenIn = 0n
-            let ethOut = 0n
+            let swapEvent: ParsedSwapEventType
             if (swapType === 1) {
               // exact eth out
-              ethOut = ethVol
               logl(
                 `[${jobId}][Sell-${sellConfig.totalOrder}][${randomWallet.wallet.address}] Sell to take ${formatUnits(ethVol, 18)} eth`,
               )
-              tokenIn = await swapLib.sellExactEth({
+              swapEvent = await swapLib.sellExactEth({
                 runner: randomWallet.wallet,
                 token,
                 ethOut: ethVol,
@@ -154,17 +158,17 @@ export class BotService {
                 fee,
               })
             } else {
+              // exact token in
               const remainLeft = random(1, 5)
               const length = estimatedTokenIn.toString().length
               if (length > remainLeft) {
                 const clearRight = length - remainLeft
                 estimatedTokenIn = (estimatedTokenIn / BigInt(10 ** clearRight)) * BigInt(10 ** clearRight)
               }
-              tokenIn = estimatedTokenIn
               logl(
                 `[${jobId}][Sell-${sellConfig.totalOrder}][${randomWallet.wallet.address}] Sell with ${formatUnits(estimatedTokenIn, 18)} token`,
               )
-              ethOut = await swapLib.sellExactToken({
+              swapEvent = await swapLib.sellExactToken({
                 runner: randomWallet.wallet,
                 token,
                 tokenAmount: estimatedTokenIn,
@@ -173,12 +177,12 @@ export class BotService {
               })
             }
             logl(
-              `[${jobId}][Sell-${sellConfig.totalOrder}][${randomWallet.wallet.address}] Sell success ${formatUnits(tokenIn, 18)} token to ${formatUnits(ethOut, 18)} eth`,
+              `[${jobId}][Sell-${sellConfig.totalOrder}][${randomWallet.wallet.address}] Sell success ${formatUnits(swapEvent.tokenAmount, 18)} token to ${formatUnits(swapEvent.ethAmount, 18)} eth`,
             )
-            randomWallet.ethBalance += ethOut
-            randomWallet.tokenBalance -= tokenIn
+            randomWallet.ethBalance += swapEvent.ethAmount
+            randomWallet.tokenBalance -= swapEvent.tokenAmount
             sellConfig.totalOrder -= 1n
-            sellConfig.volume += ethOut
+            sellConfig.volume += swapEvent.ethAmount
           } catch (error) {
             console.error(`[${jobId}][Sell-${sellConfig.totalOrder}] Sell error`, error.message)
           }
@@ -199,6 +203,42 @@ export class BotService {
     set(this.jobs, [options.token], undefined)
     const diff = DateTime.now().diff(startTime).as('seconds')
     logl(`[${jobId}] Bot stopped in ${diff} seconds`)
+  }
+
+  private async storeSwapEvent(options: { swapEvent: ParsedSwapEventType; token: string; chainId: string; jobId?: string }) {
+    const { swapEvent, token, chainId, jobId } = options
+    const weth = ChainConfigs[chainId].weth
+
+    const [tokenAmount, ethAmount] = token < weth ? [swapEvent.amount0, swapEvent.amount1] : [swapEvent.amount1, swapEvent.amount0]
+
+    await this.prisma.tokenSwap.upsert({
+      where: {
+        txHash_index: {
+          txHash: swapEvent.rawSwapLog.transactionHash,
+          index: swapEvent.rawSwapLog.index,
+        },
+      },
+      create: {
+        txHash: swapEvent.rawSwapLog.transactionHash,
+        tokenAddress: token,
+        isBuy: swapEvent.isBuy,
+        blockNumber: swapEvent.rawSwapLog.blockNumber,
+        jobId,
+        index: swapEvent.rawSwapLog.index,
+        tokenAmount: tokenAmount.toString(),
+        ethAmount: ethAmount.toString(),
+        sender: swapEvent.sender,
+        recipient: swapEvent.recipient,
+        sqrtPriceX96: swapEvent.sqrtPriceX96.toString(),
+        liquidity: swapEvent.liquidity.toString(),
+        tick: swapEvent.tick,
+        amount0: swapEvent.amount0.toString(),
+        amount1: swapEvent.amount1.toString(),
+      },
+      update: {
+        jobId,
+      },
+    })
   }
 }
 
@@ -224,6 +264,7 @@ async function prepareForStart(options: StartOptions) {
       tokenBalance: tokenBalances[index],
       buyable: buyConfig.wallets.includes(wallet),
       sellable: sellConfig.wallets.includes(wallet),
+      priority: options.priorityAddresses.includes(wallet.address),
       buyWeight: Math.ceil((Number(buyConfig.totalOrder) / buyConfig.wallets.length) * 1.5),
       sellWeight: Math.ceil((Number(sellConfig.totalOrder) / sellConfig.wallets.length) * 1.5),
     })),
@@ -247,3 +288,5 @@ function getRandomWallet(validWallets: WalletState[]): WalletState {
   }
   return validWallets[random(0, validWallets.length - 1)]
 }
+
+// function storeSwapEvent

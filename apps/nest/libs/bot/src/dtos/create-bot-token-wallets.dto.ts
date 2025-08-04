@@ -18,6 +18,11 @@ export class WalletConfigDto {
   @IsBoolean()
   @Expose()
   sellable: boolean
+
+  @ApiProperty()
+  @IsBoolean()
+  @Expose()
+  priority: boolean
 }
 
 export class CreateBotTokenWalletsDto {

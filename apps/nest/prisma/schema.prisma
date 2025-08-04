@@ -104,16 +104,17 @@ model BotWallet {
 
 model BotTokenWallet {
   walletAddress String
-  tokenAddress String
+  tokenAddress  String
 
-  buyable Boolean
+  buyable  Boolean
   sellable Boolean
+  priority Boolean
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   wallet BotWallet @relation(fields: [walletAddress], references: [address])
-  token BotToken @relation(fields: [tokenAddress], references: [address])
+  token  BotToken  @relation(fields: [tokenAddress], references: [address])
 
   @@unique([walletAddress, tokenAddress])
 }
@@ -121,33 +122,44 @@ model BotTokenWallet {
 model BotToken {
   address String @id
 
+  enabled        Boolean @default(true)
+  scannedToBlock BigInt  @default(0)
+
   chainId String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  swaps TokenSwap[]
+  swaps        TokenSwap[]
   tokenWallets BotTokenWallet[]
 }
 
 model TokenSwap {
   txHash String
-  index Int
+  index  Int
 
-  jobId Int
+  jobId String?
 
-  isBuy Boolean
+  isBuy        Boolean
   tokenAddress String
-  timestamp    Int
+  blockNumber  BigInt
 
-  fee          Decimal @db.Decimal(18, 0)
-  tokenAmount  Decimal @db.Decimal(30, 0)
-  ethAmount Decimal @db.Decimal(30, 0)
-  
+  tokenAmount Decimal @db.Decimal(30, 0)
+  ethAmount   Decimal @db.Decimal(30, 0)
+
+  sender    String
+  recipient String
+
+  amount0      Decimal @db.Decimal(30, 0)
+  amount1      Decimal @db.Decimal(30, 0)
+  sqrtPriceX96 BigInt
+  liquidity    BigInt
+  tick         Int
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  token        BotToken @relation(fields: [tokenAddress], references: [address])
+  token BotToken @relation(fields: [tokenAddress], references: [address])
 
   @@unique([txHash, index])
 }

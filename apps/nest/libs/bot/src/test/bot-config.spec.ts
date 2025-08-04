@@ -6,7 +6,7 @@ import { CreateBotTokenDto } from '../dtos/create-bot-token.dto'
 import { CreateBotTokenWalletsDto } from '../dtos/create-bot-token-wallets.dto'
 import { BotModule } from '../bot.module'
 import { BotToken } from '@prisma/client'
-import { ethers, Wallet } from 'ethers'
+import { BaseWallet, ethers, Wallet } from 'ethers'
 
 describe('BotConfigSpec', () => {
   let tc: TestContext
@@ -58,6 +58,8 @@ describe('BotConfigSpec', () => {
 
   describe('CreateBotTokenWallets', () => {
     let botToken: BotToken
+    let wallet1: BaseWallet
+    let wallet2: BaseWallet
 
     beforeAll(async () => {
       const tokenAddress = Wallet.createRandom().address
@@ -146,8 +148,8 @@ describe('BotConfigSpec', () => {
     })
 
     test('CreateBotTokenWallets:Success', async () => {
-      const wallet1 = ethers.Wallet.createRandom()
-      const wallet2 = ethers.Wallet.createRandom()
+      wallet1 = ethers.Wallet.createRandom()
+      wallet2 = ethers.Wallet.createRandom()
 
       const res = await uc.request((r) => r.post('/bot-config/token-wallets')).send({
         tokenAddress: botToken.address,
@@ -173,22 +175,14 @@ describe('BotConfigSpec', () => {
       expect(res.body[0].tokenAddress).toBe(botToken.address)
       expect(res.body[0].buyable).toBe(true)
       expect(res.body[0].sellable).toBe(false)
-      expect(res.body[0].wallet).toBeDefined()
-      expect(res.body[0].wallet.address).toBe(wallet1.address)
-      expect(res.body[0].wallet.privateKey).toBe(wallet1.privateKey)
-      expect(res.body[0].token).toBeDefined()
-      expect(res.body[0].token.address).toBe(botToken.address)
+      expect(res.body[0].tokenAddress).toBeDefined()
 
       // Check second wallet
       expect(res.body[1].walletAddress).toBe(wallet2.address)
       expect(res.body[1].tokenAddress).toBe(botToken.address)
       expect(res.body[1].buyable).toBe(false)
       expect(res.body[1].sellable).toBe(true)
-      expect(res.body[1].wallet).toBeDefined()
-      expect(res.body[1].wallet.address).toBe(wallet2.address)
-      expect(res.body[1].wallet.privateKey).toBe(wallet2.privateKey)
-      expect(res.body[1].token).toBeDefined()
-      expect(res.body[1].token.address).toBe(botToken.address)
+      expect(res.body[1].tokenAddress).toBeDefined()
     })
 
     test('CreateBotTokenWallets:UpdateExistingWallet', async () => {
@@ -198,6 +192,11 @@ describe('BotConfigSpec', () => {
       const res1 = await uc.request((r) => r.post('/bot-config/token-wallets')).send({
         tokenAddress: botToken.address,
         wallets: [
+          {
+            privateKey: wallet1.privateKey,
+            buyable: true,
+            sellable: false,
+          },
           {
             privateKey: wallet.privateKey,
             buyable: true,
@@ -221,7 +220,7 @@ describe('BotConfigSpec', () => {
           },
         ],
       } as CreateBotTokenWalletsDto)
-
+      console.log('res2=', res2.body)
       expect(res2).toBeCreated()
       expect(res2.body[0].walletAddress).toBe(wallet.address)
       expect(res2.body[0].buyable).toBe(false)

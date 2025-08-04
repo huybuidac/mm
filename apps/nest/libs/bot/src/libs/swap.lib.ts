@@ -1,5 +1,5 @@
 import { ChainConfig, ChainConfigs, getProvider, USDC_DECIMALS } from '../config'
-import { ethers, FixedNumber, formatUnits, LogDescription, parseUnits } from 'ethers'
+import { ethers, FixedNumber, formatUnits, Log, LogDescription, parseUnits } from 'ethers'
 import {
   Factory__factory,
   NftPosition__factory,
@@ -11,6 +11,7 @@ import {
 import { fnHelper } from '@app/helper/fn.helper'
 import { calculateSqrtPriceX96, MIN_TICK } from '@app/helper/sqrtprice.helper'
 import { get, set } from 'lodash'
+import { DateTime } from 'luxon'
 
 const pool = UniswapPool__factory.connect(ChainConfigs['11124'].usdc) // any
 const allownaceCacheds: {
@@ -27,6 +28,7 @@ export async function scanSwap(options: { token: string; chainId: string; fee?: 
   const { token, chainId, fee = 10000 } = options
   const config = ChainConfigs[chainId]
   const provider = getProvider(chainId)
+
   const factory = Factory__factory.connect(config.uniswapv3.factory, provider)
   const poolAddress = await factory.getPool(token, config.weth, fee)
   const poolContract = UniswapPool__factory.connect(poolAddress, provider)
@@ -59,7 +61,7 @@ export async function buy(options: {
   chainId: string
   fee?: number
 }) {
-  const { runner, token, ethAmount, fee = 10000 } = options
+  const { runner, token, ethAmount, chainId, fee = 10000 } = options
   const config = ChainConfigs[options.chainId]
   const router = Routerv2__factory.connect(config.uniswapv3.swapRouter, options.runner)
   const quoter = Quoterv2__factory.connect(config.uniswapv3.quoter, options.runner)
@@ -72,11 +74,6 @@ export async function buy(options: {
     sqrtPriceLimitX96: 0,
   })
 
-  // console.log('prepare to buy', {
-  //   token,
-  //   ethAmount: formatUnits(ethAmount, 18),
-  //   estimatedToken: formatUnits(tokenOut, 18),
-  // })
   const swapTx = await router
     .exactInputSingle(
       {
@@ -93,28 +90,46 @@ export async function buy(options: {
       },
     )
     .then((x: any) => x.wait())
-  const { amount0, amount1 } = exactSwapEvent(swapTx)
-  const tokenAmount = amount0 < 0n ? -amount0 : -amount1
-  return tokenAmount
+  return exactSwapEvent({ swapTx, token, chainId })
 }
 
-export function exactSwapEvent(tx: any) {
+export function exactSwapEvent(options: { swapTx: any; token: string; chainId: string }) {
+  const { swapTx, token, chainId } = options
   let swapLog: LogDescription
-  for (const log of tx.logs) {
+  let rawSwapLog: Log
+  for (const log of swapTx.logs) {
     try {
       const parsedLog = pool.interface.parseLog(log)
       if (parsedLog?.name === 'Swap') {
         swapLog = parsedLog
+        rawSwapLog = log
         break
       }
     } catch {}
   }
-  const [, , amount0, amount1] = swapLog.args
+
+  const [sender, recipient, amount0, amount1, sqrtPriceX96, liquidity, tick] = swapLog.args
+  const weth = ChainConfigs[chainId].weth
+  const [tokenAmount, ethAmount] =
+    token < weth ? [BigInt(amount0), BigInt(amount1)] : [BigInt(amount1), BigInt(amount0)]
+  const isBuy = tokenAmount < 0n
   return {
+    tokenAmount: isBuy ? -tokenAmount : tokenAmount,
+    ethAmount: isBuy ? ethAmount : -ethAmount,
+    isBuy,
     amount0: BigInt(amount0),
     amount1: BigInt(amount1),
+    sender,
+    recipient,
+    sqrtPriceX96,
+    liquidity,
+    tick,
+    rawSwapLog,
+    swapLog,
   }
 }
+
+export type ParsedSwapEventType = ReturnType<typeof exactSwapEvent>
 
 export async function quoteExactEthOutput(options: { token: string; ethOut: bigint; chainId: string; fee?: number }) {
   const { token, ethOut, chainId, fee = 10000 } = options
@@ -173,9 +188,10 @@ export async function sellExactToken(options: {
     .getFunction('unwrapWETH9(uint256,address)')
     .populateTransaction(ethOutMin, runner.address)
   const receipt = await router['multicall(bytes[])']([swapTx.data, unwrapEthTx.data]).then((x: any) => x.wait())
-  const { amount0, amount1 } = exactSwapEvent(receipt)
-  const ethAmount = amount0 < 0n ? -amount0 : -amount1
-  return ethAmount
+  return exactSwapEvent({ swapTx: receipt, token, chainId })
+  // const { amount0, amount1 } = swapEvent
+  // const ethAmount = amount0 < 0n ? -amount0 : -amount1
+  // return { ethAmount, swapEvent }
 }
 
 export async function sellExactEth(options: {
@@ -186,6 +202,7 @@ export async function sellExactEth(options: {
   fee?: number
 }) {
   const { runner, token, ethOut, chainId, fee = 10000 } = options
+  const provider = getProvider(chainId)
   const config = ChainConfigs[options.chainId]
   const router = Routerv2__factory.connect(config.uniswapv3.swapRouter, options.runner)
   const quoter = Quoterv2__factory.connect(config.uniswapv3.quoter, options.runner)
@@ -221,10 +238,15 @@ export async function sellExactEth(options: {
     .getFunction('unwrapWETH9(uint256,address)')
     .populateTransaction(ethOut, runner.address)
   const receipt = await router['multicall(bytes[])']([swapTx.data, unwrapEthTx.data]).then((x: any) => x.wait())
-  const { amount0, amount1 } = this.exactSwapEvent(receipt)
-  // sell => token into pool -> find positive amount
-  const tokenAmount = amount0 > 0n ? amount0 : amount1
-  return tokenAmount
+  return exactSwapEvent({ swapTx: receipt, token, chainId })
+  // let timestamp = DateTime.now().toSeconds()
+  // try {
+  //   timestamp = (await provider.getBlock(receipt.blockNumber)).timestamp
+  // } catch {}
+  // const { amount0, amount1 } = swapEvent
+  // // sell => token into pool -> find positive amount
+  // const tokenAmount = amount0 > 0n ? amount0 : amount1
+  // return { tokenAmount, timestamp, swapEvent }
 }
 
 async function ensureApprovedToken(

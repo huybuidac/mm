@@ -7,6 +7,8 @@ import { swapLib } from './libs/swap.lib'
 import { random } from 'lodash'
 import { Duration } from 'luxon'
 import { Erc20__factory } from './contracts'
+import { TestContext, testHelper } from '@app/spec'
+import { BotModule } from './bot.module'
 
 const pk = process.env.PK
 const pkBuys = process.env.PK_BUYS.split(',')
@@ -14,23 +16,27 @@ const pkSells = process.env.PK_SELLS.split(',')
 
 describe('BotService', () => {
   jest.setTimeout(1000000)
-  const service = swapLib
+  const swaplib = swapLib
+  let tc: TestContext
+  let service: BotService
+  const chainId = '11124'
+  const provider = getProvider(chainId)
 
   beforeEach(async () => {
-    // const module: TestingModule = await Test.createTestingModule({
-    //   providers: [BotService],
-    // }).compile()
-    // service = module.get<BotService>(BotService)
+    tc = await testHelper.createContext({
+      imports: [BotModule],
+    })
+    service = tc.app.get(BotService)
   })
 
   it('get eth price', async () => {
-    await service.getEthPrice()
+    await swaplib.getEthPrice()
   })
   it.skip('create LP', async () => {
     const chainId = '11124' // testnet
     const account = new ethers.Wallet(pk, getProvider(chainId))
 
-    await service.createPool({
+    await swaplib.createPool({
       runner: account,
       token: '0xAf7b049ad83742C17e2A7f73B616f1ADe6B93078',
       tokenAmount: ethers.parseUnits('1000000', 18),
@@ -45,7 +51,7 @@ describe('BotService', () => {
     const chainId = '11124' // testnet
     const account = new ethers.Wallet(pk, getProvider(chainId))
     try {
-      const tokenAmount = await service.buy({
+      const tokenAmount = await swaplib.buy({
         runner: account,
         token: '0xAf7b049ad83742C17e2A7f73B616f1ADe6B93078',
         ethAmount: ethers.parseUnits('0.001', 18),
@@ -60,7 +66,7 @@ describe('BotService', () => {
   it('sell', async () => {
     const chainId = '11124' // testnet
     const account = new ethers.Wallet(pk, getProvider(chainId))
-    const ethAmount = await service.sellExactToken({
+    const ethAmount = await swaplib.sellExactToken({
       runner: account,
       token: '0xAf7b049ad83742C17e2A7f73B616f1ADe6B93078',
       tokenAmount: ethers.parseUnits('1000', 18),
@@ -72,7 +78,7 @@ describe('BotService', () => {
   it('sell exact eth', async () => {
     const chainId = '11124' // testnet
     const account = new ethers.Wallet(pk, getProvider(chainId))
-    const tokenAmount = await service.sellExactEth({
+    const tokenAmount = await swaplib.sellExactEth({
       runner: account,
       token: '0xAf7b049ad83742C17e2A7f73B616f1ADe6B93078',
       ethOut: ethers.parseUnits('0.0001', 18),
@@ -82,7 +88,7 @@ describe('BotService', () => {
     console.log('tokenAmount', tokenAmount)
   })
   it('token price', async () => {
-    const price = await service.getTokenPrice({
+    const price = await swaplib.getTokenPrice({
       token: '0xAf7b049ad83742C17e2A7f73B616f1ADe6B93078',
       chainId: '11124',
       fee: 500,
@@ -90,7 +96,7 @@ describe('BotService', () => {
     console.log('price', price.toString())
   })
   it('quote exact eth output', async () => {
-    const tokenIn = await service.quoteExactEthOutput({
+    const tokenIn = await swaplib.quoteExactEthOutput({
       token: '0xAf7b049ad83742C17e2A7f73B616f1ADe6B93078',
       ethOut: ethers.parseUnits('0.001', 18),
       chainId: '11124',
@@ -99,7 +105,7 @@ describe('BotService', () => {
     console.log('tokenIn', tokenIn.toString())
   })
   it('scan swap', async () => {
-    await service.scanSwap({
+    await swaplib.scanSwap({
       token: '0xAf7b049ad83742C17e2A7f73B616f1ADe6B93078',
       chainId: '11124',
       fee: 500,
@@ -152,7 +158,6 @@ describe('BotService', () => {
     )
   })
   it('start', async () => {
-    const service = new BotService()
     const chainId = '11124'
     const provider = getProvider(chainId)
     const buyWallets = pkBuys.map((pk) => new ethers.Wallet(pk, provider))
@@ -172,7 +177,13 @@ describe('BotService', () => {
         volume: parseEther('0.0001'),
         totalOrder: 10n,
       },
+      priorityAddresses: [],
       duration: Duration.fromObject({ seconds: 100 }),
     })
+  })
+  it('exact swap event', async () => {
+    const tx = await provider.getTransactionReceipt('0x118847ec2a65f2286c85b42e0eb9ce04770003f0360207ee0a245f275aeb024a')
+    const result = swaplib.exactSwapEvent({ swapTx: tx, token: '0xAf7b049ad83742C17e2A7f73B616f1ADe6B93078', chainId: '11124' })
+    console.log('result', result)
   })
 })

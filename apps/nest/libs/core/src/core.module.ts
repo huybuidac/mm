@@ -2,10 +2,12 @@ import { ph } from '@app/helper/prisma.helper'
 import { createKeyv } from '@keyv/redis'
 import { CacheModule } from '@nestjs/cache-manager'
 import { Module } from '@nestjs/common'
+import { ScheduleModule } from '@nestjs/schedule'
 import { PrismaModule } from 'nestjs-prisma'
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     CacheModule.registerAsync({
       isGlobal: true,
       useFactory: async () => {
