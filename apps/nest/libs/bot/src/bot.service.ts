@@ -27,6 +27,11 @@ interface StartOptions {
   token: string
   chainId: string
   fee: number
+  price: {
+    target: number
+    min: number
+    max: number
+  }
   sellConfig: {
     wallets: ethers.Wallet[]
     volume: bigint
@@ -205,11 +210,17 @@ export class BotService {
     logl(`[${jobId}] Bot stopped in ${diff} seconds`)
   }
 
-  private async storeSwapEvent(options: { swapEvent: ParsedSwapEventType; token: string; chainId: string; jobId?: string }) {
+  private async storeSwapEvent(options: {
+    swapEvent: ParsedSwapEventType
+    token: string
+    chainId: string
+    jobId?: string
+  }) {
     const { swapEvent, token, chainId, jobId } = options
     const weth = ChainConfigs[chainId].weth
 
-    const [tokenAmount, ethAmount] = token < weth ? [swapEvent.amount0, swapEvent.amount1] : [swapEvent.amount1, swapEvent.amount0]
+    const [tokenAmount, ethAmount] =
+      token < weth ? [swapEvent.amount0, swapEvent.amount1] : [swapEvent.amount1, swapEvent.amount0]
 
     await this.prisma.tokenSwap.upsert({
       where: {

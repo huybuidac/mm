@@ -182,8 +182,14 @@ describe('BotService', () => {
     })
   })
   it('exact swap event', async () => {
-    const tx = await provider.getTransactionReceipt('0x118847ec2a65f2286c85b42e0eb9ce04770003f0360207ee0a245f275aeb024a')
-    const result = swaplib.exactSwapEvent({ swapTx: tx, token: '0xAf7b049ad83742C17e2A7f73B616f1ADe6B93078', chainId: '11124' })
+    const tx = await provider.getTransactionReceipt(
+      '0x118847ec2a65f2286c85b42e0eb9ce04770003f0360207ee0a245f275aeb024a',
+    )
+    const result = swaplib.exactSwapEvent({
+      swapTx: tx,
+      token: '0xAf7b049ad83742C17e2A7f73B616f1ADe6B93078',
+      chainId: '11124',
+    })
     console.log('result', result)
   })
 })
