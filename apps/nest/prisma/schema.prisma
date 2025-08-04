@@ -90,3 +90,89 @@ model Todo {
   profileId BigInt
   profile   Profile @relation(fields: [profileId], references: [id])
 }
+
+model BotWallet {
+  address String @id
+
+  privateKey String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tokenWallets BotTokenWallet[]
+}
+
+model BotTokenWallet {
+  walletAddress String
+  tokenAddress String
+
+  buyable Boolean
+  sellable Boolean
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  wallet BotWallet @relation(fields: [walletAddress], references: [address])
+  token BotToken @relation(fields: [tokenAddress], references: [address])
+
+  @@unique([walletAddress, tokenAddress])
+}
+
+model BotToken {
+  address String @id
+
+  chainId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  swaps TokenSwap[]
+  tokenWallets BotTokenWallet[]
+}
+
+model TokenSwap {
+  txHash String
+  index Int
+
+  jobId Int
+
+  isBuy Boolean
+  tokenAddress String
+  timestamp    Int
+
+  fee          Decimal @db.Decimal(18, 0)
+  tokenAmount  Decimal @db.Decimal(30, 0)
+  ethAmount Decimal @db.Decimal(30, 0)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  token        BotToken @relation(fields: [tokenAddress], references: [address])
+
+  @@unique([txHash, index])
+}
+
+// model Strategy {
+//   id BigInt @id @default(autoincrement())
+
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+
+//   name String
+//   description String?
+
+//   tokens BotToken[]
+// }
+
+// enum VolumeType {
+//   ALL
+//   DAY
+//   HOUR
+// }
+
+// model Volume {
+//   tokenAddress String
+//   type VolumeType
+//   amount Decimal @db.Decimal(30, 0)
+//   timestamp Int
+// }

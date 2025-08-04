@@ -66,6 +66,12 @@
       ],
       "@app/todo/*": [
         "libs/todo/src/*"
+      ],
+      "@app/bot": [
+        "libs/bot/src"
+      ],
+      "@app/bot/*": [
+        "libs/bot/src/*"
       ]
     }
   }
