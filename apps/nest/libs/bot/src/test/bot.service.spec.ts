@@ -1,14 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing'
-import { BotService } from './bot.service'
+import { BotService } from '../services/bot.service'
 import { ethers, parseEther } from 'ethers'
-import { ChainConfigs, getProvider } from './config'
-import { getContractCreation } from './helpers/ethers-scan.helper'
-import { swapLib } from './libs/swap.lib'
+import { ChainConfigs, getProvider } from '../config'
+import { getContractCreation } from '../helpers/ethers-scan.helper'
+import { swapLib } from '../libs/swap.lib'
 import { random } from 'lodash'
 import { Duration } from 'luxon'
-import { Erc20__factory } from './contracts'
+import { Erc20__factory } from '../contracts'
 import { TestContext, testHelper } from '@app/spec'
-import { BotModule } from './bot.module'
+import { BotModule } from '../bot.module'
 
 const pk = process.env.PK
 const pkBuys = process.env.PK_BUYS.split(',')
@@ -109,6 +109,7 @@ describe('BotService', () => {
       token: '0xAf7b049ad83742C17e2A7f73B616f1ADe6B93078',
       chainId: '11124',
       fee: 500,
+      fromBlock: 1,
     })
   })
   it('getContractCreation', async () => {
@@ -168,13 +169,13 @@ describe('BotService', () => {
       fee: 500,
       sellConfig: {
         wallets: [...sellWallets, ...buyWallets],
-        volume: parseEther('0.001'),
+        volume: parseEther('0.0001'),
         totalOrder: 10n,
         delay: Duration.fromObject({ seconds: 10 }),
       },
       buyConfig: {
         wallets: [...buyWallets, ...sellWallets],
-        volume: parseEther('0.0001'),
+        volume: parseEther('0.001'),
         totalOrder: 10n,
       },
       priorityAddresses: [],

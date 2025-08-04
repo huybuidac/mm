@@ -123,7 +123,7 @@ model BotToken {
   address String @id
 
   enabled        Boolean @default(true)
-  scannedToBlock BigInt  @default(0)
+  scannedToBlock Int   @default(0)
 
   chainId String
 
@@ -142,22 +142,18 @@ model TokenSwap {
 
   isBuy        Boolean
   tokenAddress String
-  blockNumber  BigInt
+  blockNumber  Int
 
   tokenAmount Decimal @db.Decimal(30, 0)
   ethAmount   Decimal @db.Decimal(30, 0)
 
   sender    String
   recipient String
-
   amount0      Decimal @db.Decimal(30, 0)
   amount1      Decimal @db.Decimal(30, 0)
-  sqrtPriceX96 BigInt
-  liquidity    BigInt
+  sqrtPriceX96 String
+  liquidity    Decimal @db.Decimal(30, 0)
   tick         Int
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
   token BotToken @relation(fields: [tokenAddress], references: [address])
 

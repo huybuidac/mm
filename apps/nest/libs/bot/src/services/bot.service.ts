@@ -3,10 +3,10 @@ import { DateTime, Duration } from 'luxon'
 import { ethers, formatUnits } from 'ethers'
 import { get, keyBy, maxBy, omit, pick, random, set, unionBy, uniq, uniqBy } from 'lodash'
 import { MulticallWrapper } from 'ethers-multicall-provider'
-import { ChainConfigs, getProvider } from './config'
-import { Erc20__factory } from './contracts'
+import { ChainConfigs, getProvider } from '../config'
+import { Erc20__factory } from '../contracts'
 import { proH } from '@app/helper'
-import { ParsedSwapEventType, swapLib } from './libs/swap.lib'
+import { parsedSwapEventToDb, ParsedSwapEventType, swapLib } from '../libs/swap.lib'
 import { logl } from '@app/helper/log.helper'
 import { PrismaService } from 'nestjs-prisma'
 import randomstring from 'randomstring'
@@ -27,11 +27,11 @@ interface StartOptions {
   token: string
   chainId: string
   fee: number
-  price: {
-    target: number
-    min: number
-    max: number
-  }
+  // price: {
+  //   target: number
+  //   min: number
+  //   max: number
+  // }
   sellConfig: {
     wallets: ethers.Wallet[]
     volume: bigint
@@ -217,35 +217,15 @@ export class BotService {
     jobId?: string
   }) {
     const { swapEvent, token, chainId, jobId } = options
-    const weth = ChainConfigs[chainId].weth
-
-    const [tokenAmount, ethAmount] =
-      token < weth ? [swapEvent.amount0, swapEvent.amount1] : [swapEvent.amount1, swapEvent.amount0]
 
     await this.prisma.tokenSwap.upsert({
       where: {
         txHash_index: {
           txHash: swapEvent.rawSwapLog.transactionHash,
-          index: swapEvent.rawSwapLog.index,
+          index: swapEvent.rawSwapLog.transactionIndex,
         },
       },
-      create: {
-        txHash: swapEvent.rawSwapLog.transactionHash,
-        tokenAddress: token,
-        isBuy: swapEvent.isBuy,
-        blockNumber: swapEvent.rawSwapLog.blockNumber,
-        jobId,
-        index: swapEvent.rawSwapLog.index,
-        tokenAmount: tokenAmount.toString(),
-        ethAmount: ethAmount.toString(),
-        sender: swapEvent.sender,
-        recipient: swapEvent.recipient,
-        sqrtPriceX96: swapEvent.sqrtPriceX96.toString(),
-        liquidity: swapEvent.liquidity.toString(),
-        tick: swapEvent.tick,
-        amount0: swapEvent.amount0.toString(),
-        amount1: swapEvent.amount1.toString(),
-      },
+      create: parsedSwapEventToDb({ swapEvent, token, chainId, jobId }),
       update: {
         jobId,
       },

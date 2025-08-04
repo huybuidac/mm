@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "mm"."TokenSwap" ALTER COLUMN "sqrtPriceX96" SET DATA TYPE TEXT,
+ALTER COLUMN "liquidity" SET DATA TYPE DECIMAL(30,0);

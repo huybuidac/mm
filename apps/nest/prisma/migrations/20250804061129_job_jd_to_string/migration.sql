@@ -1,3 +1,0 @@
--- AlterTable
-ALTER TABLE "mm"."TokenSwap" ALTER COLUMN "jobId" DROP NOT NULL,
-ALTER COLUMN "jobId" SET DATA TYPE TEXT;

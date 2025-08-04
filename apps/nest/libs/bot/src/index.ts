@@ -1,5 +1,5 @@
 export * from './bot.module'
-export * from './bot.service'
+export * from './services/bot.service'
 export * from './controllers/bot-config.controller'
 export * from './services/bot-config.service'
 export * from './entities/bot-token.entity'

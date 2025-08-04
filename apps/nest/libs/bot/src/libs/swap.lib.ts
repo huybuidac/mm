@@ -24,17 +24,24 @@ const allownaceCacheds: {
   }
 } = {}
 
-export async function scanSwap(options: { token: string; chainId: string; fee?: number }) {
-  const { token, chainId, fee = 10000 } = options
+export async function scanSwap(options: { token: string; chainId: string; fee?: number; fromBlock: number }) {
+  const { token, chainId, fee = 10000, fromBlock } = options
+  console.log('scanSwap', { token, chainId, fee, fromBlock })
   const config = ChainConfigs[chainId]
   const provider = getProvider(chainId)
-
   const factory = Factory__factory.connect(config.uniswapv3.factory, provider)
   const poolAddress = await factory.getPool(token, config.weth, fee)
   const poolContract = UniswapPool__factory.connect(poolAddress, provider)
 
-  const logs = await poolContract.queryFilter(poolContract.getEvent('Swap'), 11873495)
-  console.log('logs', logs)
+  const logs = await poolContract.queryFilter(poolContract.getEvent('Swap'), fromBlock)
+  return logs.map((log) =>
+    tuningSwapEvent({
+      swapLog: new LogDescription(log.fragment, log.topics[0], log.args as any),
+      rawSwapLog: log,
+      chainId,
+      token,
+    }),
+  )
 }
 
 export async function getTokenPrice(options: { token: string; chainId: string; fee?: number }) {
@@ -108,10 +115,24 @@ export function exactSwapEvent(options: { swapTx: any; token: string; chainId: s
     } catch {}
   }
 
+  return tuningSwapEvent({ swapLog, chainId, token, rawSwapLog })
+}
+
+export type ParsedSwapEventType = ReturnType<typeof exactSwapEvent>
+
+function tuningSwapEvent(options: {
+  swapLog: ethers.LogDescription
+  chainId: string
+  token: string
+  rawSwapLog: ethers.Log
+}) {
+  const { swapLog, chainId, token, rawSwapLog } = options
   const [sender, recipient, amount0, amount1, sqrtPriceX96, liquidity, tick] = swapLog.args
   const weth = ChainConfigs[chainId].weth
   const [tokenAmount, ethAmount] =
     token < weth ? [BigInt(amount0), BigInt(amount1)] : [BigInt(amount1), BigInt(amount0)]
+  const blockTimestampRef = ChainConfigs[chainId].blockTimestamp
+  const timestamp = blockTimestampRef.unix + rawSwapLog.blockNumber - blockTimestampRef.block
   const isBuy = tokenAmount < 0n
   return {
     tokenAmount: isBuy ? -tokenAmount : tokenAmount,
@@ -126,10 +147,38 @@ export function exactSwapEvent(options: { swapTx: any; token: string; chainId: s
     tick,
     rawSwapLog,
     swapLog,
+    timestamp: DateTime.fromSeconds(timestamp).toJSDate(),
   }
 }
 
-export type ParsedSwapEventType = ReturnType<typeof exactSwapEvent>
+export const parsedSwapEventToDb = (options: {
+  swapEvent: ParsedSwapEventType
+  token: string
+  chainId: string
+  jobId?: string
+}) => {
+  const { swapEvent, token, chainId, jobId } = options
+  const weth = ChainConfigs[chainId].weth
+  // const [tokenAmount, ethAmount] =
+  //   token < weth ? [swapEvent.amount0, swapEvent.amount1] : [swapEvent.amount1, swapEvent.amount0]
+  return {
+    txHash: swapEvent.rawSwapLog.transactionHash,
+    tokenAddress: token,
+    isBuy: swapEvent.isBuy,
+    blockNumber: swapEvent.rawSwapLog.blockNumber,
+    jobId,
+    index: swapEvent.rawSwapLog.transactionIndex,
+    tokenAmount: swapEvent.tokenAmount.toString(),
+    ethAmount: swapEvent.ethAmount.toString(),
+    sender: swapEvent.sender,
+    recipient: swapEvent.recipient,
+    sqrtPriceX96: swapEvent.sqrtPriceX96.toString(),
+    liquidity: swapEvent.liquidity.toString(),
+    tick: Number(swapEvent.tick),
+    amount0: swapEvent.amount0.toString(),
+    amount1: swapEvent.amount1.toString(),
+  }
+}
 
 export async function quoteExactEthOutput(options: { token: string; ethOut: bigint; chainId: string; fee?: number }) {
   const { token, ethOut, chainId, fee = 10000 } = options

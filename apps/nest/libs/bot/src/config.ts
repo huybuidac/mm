@@ -12,6 +12,10 @@ export interface ChainConfig {
     swapRouter: string
     universalRouter: string
   }
+  blockTimestamp: {
+    block: number
+    unix: number
+  }
 }
 
 export const USDC_DECIMALS = 6
@@ -29,6 +33,10 @@ export const ChainConfigs: Record<string, ChainConfig> = {
       swapRouter: '0xb9D4347d129a83cBC40499Cd4fF223dE172a70dF',
       universalRouter: '0xCdFB71b46bF3f44FC909B5B4Eaf4967EC3C5B4e5',
     },
+    blockTimestamp: {
+      block: 11974405,
+      unix: 1754318682,
+    },
   },
   '2741': {
     name: 'Abstract',
@@ -41,6 +49,10 @@ export const ChainConfigs: Record<string, ChainConfig> = {
       quoter: '0x728BD3eC25D5EDBafebB84F3d67367Cd9EBC7693',
       swapRouter: '0x7712FA47387542819d4E35A23f8116C90C18767C',
       universalRouter: '0xE1b076ea612Db28a0d768660e4D81346c02ED75e',
+    },
+    blockTimestamp: {
+      block: 16054492,
+      unix: 1754317491,
     },
   },
 }
