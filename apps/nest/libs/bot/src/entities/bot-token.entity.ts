@@ -12,6 +12,14 @@ export class BotTokenEntity {
 
   @ApiProperty()
   @Expose()
+  enabled: boolean
+
+  @ApiProperty()
+  @Expose()
+  fee: number
+
+  @ApiProperty()
+  @Expose()
   createdAt: Date
 
   @ApiProperty()

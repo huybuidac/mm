@@ -108,7 +108,6 @@ model BotTokenWallet {
 
   buyable  Boolean
   sellable Boolean
-  priority Boolean
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -126,6 +125,7 @@ model BotToken {
   scannedToBlock Int   @default(0)
 
   chainId String
+  fee     Int @default(500)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

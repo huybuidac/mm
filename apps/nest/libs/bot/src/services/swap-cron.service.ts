@@ -39,8 +39,8 @@ export class SwapCronService {
       })
       logl(`ScanSwapEvents: ${token.address} ${swaps.length} swaps`)
       const swapChunks = chunk(swaps, 1000)
-      const lastBlock = swaps[swaps.length - 1].rawSwapLog.blockNumber
       if (swaps.length > 0) {
+        const lastBlock = swaps[swaps.length - 1].rawSwapLog.blockNumber
         await this.prisma.$transaction(async (tx) => {
           for (const swapChunk of swapChunks) {
             await tx.tokenSwap.createMany({

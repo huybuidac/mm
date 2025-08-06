@@ -95,12 +95,12 @@ export class AuthController {
     return this.authService.refreshToken(user)
   }
 
-  @ApiCreatedResponse({ type: TokenResDto })
-  @UsePipes(new ValidationPipe({ transform: true }))
-  @Post('local/register')
-  register(@Req() req: Request, @Body() createUserDto: RegisterDto) {
-    return this.authService.register(req, createUserDto)
-  }
+  // @ApiCreatedResponse({ type: TokenResDto })
+  // @UsePipes(new ValidationPipe({ transform: true }))
+  // @Post('local/register')
+  // register(@Req() req: Request, @Body() createUserDto: RegisterDto) {
+  //   return this.authService.register(req, createUserDto)
+  // }
 
   @ApiBearerAuth()
   @ApiOkResponse({ type: UserEntity })
@@ -112,13 +112,13 @@ export class AuthController {
     return req.user
   }
 
-  @ApiParam({ name: 'provider', enum: ['facebook', 'apple', 'google'] })
-  @ApiQuery({ name: 'access_token', type: String })
-  @ApiOkResponse({ type: TokenResDto })
-  @Get(':provider/callback')
-  socialCallback(@Param('provider') provider: SocialProviderType, @Query('access_token') accessToken: string) {
-    return this.authService.callback(provider, accessToken)
-  }
+  // @ApiParam({ name: 'provider', enum: ['facebook', 'apple', 'google'] })
+  // @ApiQuery({ name: 'access_token', type: String })
+  // @ApiOkResponse({ type: TokenResDto })
+  // @Get(':provider/callback')
+  // socialCallback(@Param('provider') provider: SocialProviderType, @Query('access_token') accessToken: string) {
+  //   return this.authService.callback(provider, accessToken)
+  // }
 
   // @Post('email/confirm')
   // @HttpCode(HttpStatus.OK)

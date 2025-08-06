@@ -1,4 +1,5 @@
 import { FixedNumber } from 'ethers'
+import { Prisma } from '@prisma/client'
 
 /**
  * Safe from function, return 0 if error
@@ -75,10 +76,15 @@ const max = (...args: FixedNumber[]) => {
   return args.reduce((acc, cur) => (cmp(acc, cur) > 0 ? acc : cur))
 }
 
+export const decimal2BigInt = (value: Prisma.Decimal, precision: number = 50) => {
+  return BigInt(value.toPrecision(precision).split('.')[0])
+}
+
 export const FnZero = FixedNumber.fromString('0')
 export const Fn100 = FixedNumber.fromString('100')
 
 export const fnHelper = {
+  decimal2BigInt,
   gt,
   gte,
   lt,

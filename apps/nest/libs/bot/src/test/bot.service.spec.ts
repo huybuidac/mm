@@ -9,6 +9,7 @@ import { Duration } from 'luxon'
 import { Erc20__factory } from '../contracts'
 import { TestContext, testHelper } from '@app/spec'
 import { BotModule } from '../bot.module'
+import fs from 'fs'
 
 const pk = process.env.PK
 const pkBuys = process.env.PK_BUYS.split(',')
@@ -125,12 +126,12 @@ describe('BotService', () => {
       console.log('res', res)
     }
   })
-  it('generate wallets', async () => {
-    for (let i = 0; i < 10; i++) {
-      const wallet = ethers.Wallet.createRandom()
-      console.log('wallet', wallet.privateKey)
-    }
-  })
+  // it('generate wallets', async () => {
+  //   for (let i = 0; i < 10; i++) {
+  //     const wallet = ethers.Wallet.createRandom()
+  //     console.log('wallet', wallet.privateKey)
+  //   }
+  // })
   it('fund eth', async () => {
     const chainId = '11124' // testnet
     const mainWallet = new ethers.Wallet(pk, getProvider(chainId))
@@ -178,7 +179,6 @@ describe('BotService', () => {
         volume: parseEther('0.001'),
         totalOrder: 10n,
       },
-      priorityAddresses: [],
       duration: Duration.fromObject({ seconds: 100 }),
     })
   })
@@ -192,5 +192,20 @@ describe('BotService', () => {
       chainId: '11124',
     })
     console.log('result', result)
+  })
+  it('generate wallets', async () => {
+    const wallets: {
+      address: string
+      pk: string
+    }[] = []
+    const path = __dirname + '/wallets.csv'
+    for (let i = 0; i < 50; i++) {
+      console.log('i', i)
+      const wallet = ethers.Wallet.createRandom()
+      wallets.push({ address: wallet.address, pk: wallet.privateKey })
+    }
+    // write to csv
+    const csv = 'address,pk\n' + wallets.map((w) => `${w.address},${w.pk}`).join('\n')
+    fs.writeFileSync(path, csv)
   })
 })

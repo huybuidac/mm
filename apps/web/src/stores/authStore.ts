@@ -1,55 +1,44 @@
-import Cookies from 'js-cookie'
 import { create } from 'zustand'
-
-const ACCESS_TOKEN = 'thisisjustarandomstring'
-
-interface AuthUser {
-  accountNo: string
-  email: string
-  role: string[]
-  exp: number
-}
+import { persist } from 'zustand/middleware'
+import { UserEntity } from '@/lib/api'
 
 interface AuthState {
-  auth: {
-    user: AuthUser | null
-    setUser: (user: AuthUser | null) => void
-    accessToken: string
-    setAccessToken: (accessToken: string) => void
-    resetAccessToken: () => void
-    reset: () => void
-  }
+  user: UserEntity | null
+  jwt: string
 }
 
-export const useAuthStore = create<AuthState>()((set) => {
-  const cookieState = Cookies.get(ACCESS_TOKEN)
-  const initToken = cookieState ? JSON.parse(cookieState) : ''
-  return {
-    auth: {
-      user: null,
-      setUser: (user) =>
-        set((state) => ({ ...state, auth: { ...state.auth, user } })),
-      accessToken: initToken,
-      setAccessToken: (accessToken) =>
-        set((state) => {
-          Cookies.set(ACCESS_TOKEN, JSON.stringify(accessToken))
-          return { ...state, auth: { ...state.auth, accessToken } }
-        }),
-      resetAccessToken: () =>
-        set((state) => {
-          Cookies.remove(ACCESS_TOKEN)
-          return { ...state, auth: { ...state.auth, accessToken: '' } }
-        }),
-      reset: () =>
-        set((state) => {
-          Cookies.remove(ACCESS_TOKEN)
-          return {
-            ...state,
-            auth: { ...state.auth, user: null, accessToken: '' },
-          }
-        }),
+interface AuthActions {
+  setUser: (user: UserEntity | null) => void
+  setJwt: (jwt: string) => void
+  resetJwt: () => void
+  reset: () => void
+}
+
+export const useAuthStore = create<AuthState & AuthActions>()(
+  persist(
+    (set, _, store) => {
+      return {
+        user: null,
+        setUser: (user) =>
+          set((state) => ({ ...state, user })),
+        jwt: '',
+        setJwt: (jwt) =>
+          set((state) => {
+            return { ...state, jwt }
+          }),
+        resetJwt: () =>
+          set((state) => {
+            return { ...state, jwt: '' }
+          }),
+        reset: () =>
+          set(store.getInitialState()),
+      }
     },
-  }
-})
+    {
+      name: 'auth',
+      // storage: createJSONStorage(() => localStorage),
+    }
+  )
+)
 
 // export const useAuth = () => useAuthStore((state) => state.auth)

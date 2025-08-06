@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common'
+import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { JwtGuard } from '@app/auth/guards/jwt.guard'
 import { BotConfigService } from '../services/bot-config.service'
@@ -11,6 +11,24 @@ import { BotTokenWalletEntity } from '../entities/bot-token-wallet.entity'
 @ApiTags('BotConfig')
 export class BotConfigController {
   constructor(private readonly botConfigService: BotConfigService) {}
+
+  @Get('tokens')
+  @ApiOperation({ summary: 'Get all tokens' })
+  @ApiBearerAuth()
+  @ApiCreatedResponse({ type: () => BotTokenEntity, isArray: true })
+  @UseGuards(JwtGuard)
+  getAllTokens() {
+    return this.botConfigService.getAllTokens()
+  }
+
+  @Patch('tokens/:address/toggle-enabled')
+  @ApiOperation({ summary: 'Toggle token enabled status' })
+  @ApiBearerAuth()
+  @ApiCreatedResponse({ type: () => BotTokenEntity })
+  @UseGuards(JwtGuard)
+  toggleTokenEnabled(@Param('address') address: string) {
+    return this.botConfigService.toggleTokenEnabled(address)
+  }
 
   @Post('tokens')
   @ApiOperation({ summary: 'Create a new bot token' })
@@ -28,5 +46,14 @@ export class BotConfigController {
   @UseGuards(JwtGuard)
   createBotTokenWallets(@Body() createBotTokenWalletsDto: CreateBotTokenWalletsDto) {
     return this.botConfigService.createBotTokenWallets(createBotTokenWalletsDto)
+  }
+
+  @Get('tokens/:address/wallets')
+  @ApiOperation({ summary: 'Get all token wallets' })
+  @ApiBearerAuth()
+  @ApiCreatedResponse({ type: () => BotTokenWalletEntity, isArray: true })
+  @UseGuards(JwtGuard)
+  getAllTokenWallets(@Param('address') address: string) {
+    return this.botConfigService.getAllTokenWallets(address)
   }
 }

@@ -9,6 +9,7 @@
     "seed": "ts-node prisma/seed.ts"
   },
   "scripts": {
+    "build:vercel": "npx prisma generate && nest build api",
     "build": "npx prisma generate && run-p build:*",
     "build:layer": "node ./node_modules/webpack/bin/webpack.js --config ./webpack-layer.config.js && rm -rf dist/layer/nodejs/node_modules/.prisma/client/libquery_engine-darwin-arm64.dylib.node",
     "build:api": "nest build api --webpackPath webpack-lambda.config.js",
@@ -25,6 +26,7 @@
     "prisma:dev:spec": "dotenv -e .env.spec -- npx prisma migrate dev",
     "dev": "--------------------------------",
     "prisma:reset:dev": "dotenv -e .env.dev -- npx prisma migrate reset --force && dotenv -e .env.dev -- npx prisma db seed",
+    "prisma:migrate:dev": "dotenv -e .env.dev -- npx prisma migrate deploy",
     "start:dev": "dotenv -e .env.dev -- nest start",
     "start:dev:watch": "dotenv -e .env.dev -- nest start --watch",
     "test": "jest",
@@ -43,7 +45,7 @@
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/schedule": "^6.0.0",
     "@nestjs/swagger": "^8.1.1",
-    "@prisma/client": "^6.13.0",
+    "@prisma/client": "=6.12.0",
     "@sendgrid/mail": "^8.1.4",
     "@vendia/serverless-express": "^4.12.6",
     "apple-signin-auth": "^1.7.8",
@@ -103,7 +105,7 @@
     "node-loader": "^2.1.0",
     "npm-run-all": "^4.1.5",
     "prettier": "^3.0.0",
-    "prisma": "^6.13.0",
+    "prisma": "=6.12.0",
     "run-script-webpack-plugin": "^0.2.0",
     "source-map-support": "^0.5.21",
     "supertest": "^7.0.0",

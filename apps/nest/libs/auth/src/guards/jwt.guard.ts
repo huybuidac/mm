@@ -15,7 +15,7 @@ export class JwtGuard extends AuthGuard('jwt') {
   async canActivate(context: ExecutionContext) {
     const result = (await super.canActivate(context)) as boolean
     if (!result) return result
-
+    console.log('context.getType', context.getType())
     if (context.getType() === 'http') {
       const request = context.switchToHttp().getRequest()
       const excludeProfile = this._reflector.getAllAndOverride<boolean>(EXCLUDE_PROFILE_KEY, [

@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { Expose } from 'class-transformer'
-import { IsNotEmpty, IsString } from 'class-validator'
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator'
 
 export class CreateBotTokenDto {
   @ApiProperty()
@@ -14,4 +14,10 @@ export class CreateBotTokenDto {
   @IsNotEmpty()
   @Expose()
   chainId: string
+
+  @ApiProperty()
+  @IsNumber()
+  @IsNotEmpty()
+  @Expose()
+  fee: number
 }

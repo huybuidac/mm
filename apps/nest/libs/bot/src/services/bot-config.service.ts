@@ -12,11 +12,30 @@ import { uniqBy } from 'lodash'
 export class BotConfigService {
   constructor(private readonly prisma: PrismaService) {}
 
+  async getAllTokens() {
+    const tokens = await this.prisma.botToken.findMany()
+    return th.toInstancesSafe(BotTokenEntity, tokens)
+  }
+
+  async toggleTokenEnabled(address: string) {
+    const token = await this.prisma.botToken.findUniqueOrThrow({
+      where: { address },
+    })
+    const updatedToken = await this.prisma.botToken.update({
+      where: { address },
+      data: {
+        enabled: !token.enabled,
+      },
+    })
+    return th.toInstanceSafe(BotTokenEntity, updatedToken)
+  }
+
   async createBotToken(dto: CreateBotTokenDto): Promise<BotTokenEntity> {
     const botToken = await this.prisma.botToken.create({
       data: {
         address: dto.address,
         chainId: dto.chainId,
+        fee: dto.fee,
       },
     })
     return th.toInstanceSafe(BotTokenEntity, botToken)
@@ -49,11 +68,17 @@ export class BotConfigService {
           tokenAddress: dto.tokenAddress,
           buyable: wallet.buyable,
           sellable: wallet.sellable,
-          priority: wallet.priority,
         })),
       })
     })
 
     return th.toInstancesSafe(BotTokenWalletEntity, results)
+  }
+
+  async getAllTokenWallets(address: string) {
+    const wallets = await this.prisma.botTokenWallet.findMany({
+      where: { tokenAddress: address },
+    })
+    return th.toInstancesSafe(BotTokenWalletEntity, wallets)
   }
 }

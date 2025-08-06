@@ -10,6 +10,7 @@ const localDev = process.env.LOCAL_DEV === 'true'
 if (localDev) {
   async function bootstrap() {
     const app = await NestFactory.create(ApiModule)
+    app.enableCors({})
     await setupNestApp(app)
     setupSwaggerUI(app)
     await app.listen(process.env.port ?? 3000)
