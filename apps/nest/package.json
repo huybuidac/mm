@@ -10,6 +10,7 @@
   },
   "scripts": {
     "build:vercel": "npx prisma generate && nest build api",
+    "start:vercel": "nest start api",
     "build": "npx prisma generate && run-p build:*",
     "build:layer": "node ./node_modules/webpack/bin/webpack.js --config ./webpack-layer.config.js && rm -rf dist/layer/nodejs/node_modules/.prisma/client/libquery_engine-darwin-arm64.dylib.node",
     "build:api": "nest build api --webpackPath webpack-lambda.config.js",
