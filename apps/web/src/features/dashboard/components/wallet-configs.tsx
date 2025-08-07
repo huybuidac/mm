@@ -203,9 +203,10 @@ export function WalletConfigs(options: { tokenAddress: string, chainId: string }
     const dto: CreateBotTokenWalletsDto = {
       tokenAddress,
       wallets: mergedWallets
-        .filter(wallet => wallet.privateKey && wallet.privateKey !== '') // Only include wallets with private keys
+        // .filter(wallet => wallet.privateKey && wallet.privateKey !== '') // Only include wallets with private keys
         .map(wallet => ({
-          privateKey: wallet.privateKey!,
+          privateKey: wallet.privateKey,
+          address: wallet.address,
           buyable: wallet.buyable,
           sellable: wallet.sellable
         }))

@@ -1,13 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { Expose, Type } from 'class-transformer'
-import { IsArray, IsBoolean, IsNotEmpty, IsString, ValidateNested } from 'class-validator'
+import { IsArray, IsBoolean, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator'
 
 export class WalletConfigDto {
   @ApiProperty()
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   @Expose()
   privateKey: string
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  @Expose()
+  address: string
 
   @ApiProperty()
   @IsBoolean()
