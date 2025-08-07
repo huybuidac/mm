@@ -39,7 +39,7 @@ export const useStartBot = () => {
         }
         const queryStr = new URLSearchParams(query).toString()
         const eventSource = new EventSourcePolyfill(
-          `${import.meta.env.VITE_APP_API_URL}/bot/start/${data.token}?${queryStr}`,
+          `https://mm-production-1f2f.up.railway.app/bot/start/${data.token}?${queryStr}`,
           {
             headers: {
               Authorization: `Bearer ${auth.jwt}`,
