@@ -23,7 +23,7 @@ export const USDC_DECIMALS = 6
 export const ChainConfigs: Record<string, ChainConfig> = {
   '11124': {
     name: 'Abstract Sepolia Testnet',
-    rpc: 'https://api.testnet.abs.xyz',
+    rpc: 'https://abstract-testnet.g.alchemy.com/v2/9HAkZQ4fyogW6J6ILzZjnVe-KQjNBDGT',
     weth: '0x9EDCde0257F2386Ce177C3a7FCdd97787F0D841d',
     usdc: '0xe4C7fBB0a626ed208021ccabA6Be1566905E2dFc',
     uniswapv3: {
@@ -40,7 +40,7 @@ export const ChainConfigs: Record<string, ChainConfig> = {
   },
   '2741': {
     name: 'Abstract',
-    rpc: 'https://api.mainnet.abs.xyz',
+    rpc: 'https://abstract-mainnet.g.alchemy.com/v2/9HAkZQ4fyogW6J6ILzZjnVe-KQjNBDGT',
     weth: '0x3439153EB7AF838Ad19d56E1571FBD09333C2809',
     usdc: '0x84A71ccD554Cc1b02749b35d22F684CC8ec987e1',
     uniswapv3: {
