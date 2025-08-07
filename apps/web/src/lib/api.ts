@@ -15,11 +15,11 @@ const getApiUrl = () => {
 }
 
 export const guestAxios = axios.create({
-  baseURL: getApiUrl(),
+  baseURL: 'https://mm-production-1f2f.up.railway.app',
 })
 
 export const authAxios = axios.create({
-  baseURL: getApiUrl(),
+  baseURL: 'https://mm-production-1f2f.up.railway.app',
 })
 
 authAxios.interceptors.request.use((config) => {
