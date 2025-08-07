@@ -6,7 +6,7 @@ import { CreateBotTokenWalletsDto } from '../dtos/create-bot-token-wallets.dto'
 import { BotTokenEntity } from '../entities/bot-token.entity'
 import { BotTokenWalletEntity } from '../entities/bot-token-wallet.entity'
 import { PrismaService } from 'nestjs-prisma'
-import { uniqBy } from 'lodash'
+import { keyBy, uniqBy } from 'lodash'
 
 @Injectable()
 export class BotConfigService {
@@ -42,14 +42,26 @@ export class BotConfigService {
   }
 
   async createBotTokenWallets(dto: CreateBotTokenWalletsDto): Promise<BotTokenWalletEntity[]> {
+    const oldWallets = await this.prisma.botTokenWallet.findMany({
+      where: { tokenAddress: dto.tokenAddress },
+      include: {
+        wallet: true,
+      },
+      take: 1000,
+    })
+    const oldWalletsMap = keyBy(oldWallets, 'walletAddress')
     await this.prisma.botToken.findUniqueOrThrow({
       where: { address: dto.tokenAddress },
     })
 
-    const wallets = dto.wallets.map((wallet) => ({
-      address: new ethers.Wallet(wallet.privateKey).address,
-      ...wallet,
-    }))
+    const wallets = dto.wallets.map((wallet) => {
+      const privateKey = wallet.privateKey || oldWalletsMap[wallet.address]?.wallet.privateKey
+      return {
+        ...wallet,
+        privateKey,
+        address: new ethers.Wallet(privateKey).address,
+      }
+    })
 
     const results = await this.prisma.$transaction(async (tx) => {
       await tx.botTokenWallet.deleteMany({
@@ -78,6 +90,7 @@ export class BotConfigService {
   async getAllTokenWallets(address: string) {
     const wallets = await this.prisma.botTokenWallet.findMany({
       where: { tokenAddress: address },
+      take: 1000,
     })
     return th.toInstancesSafe(BotTokenWalletEntity, wallets)
   }
