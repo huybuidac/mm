@@ -2,17 +2,17 @@ import { useAuthStore } from '@/stores/authStore'
 import axios from 'axios'
 
 // Get API URL with fallback for development
-const getApiUrl = () => {
-  let apiUrl = import.meta.env.VITE_APP_API_URL
-  console.log('apiUrl', apiUrl)
-  apiUrl = apiUrl || 'https://mm-production-1f2f.up.railway.app'
-  if (!apiUrl) {
-    console.warn('VITE_APP_API_URL is not defined. Using fallback URL.')
-    // Fallback for development
-    return 'https://mm-production-1f2f.up.railway.app'
-  }
-  return apiUrl
-}
+// const getApiUrl = () => {
+//   let apiUrl = import.meta.env.VITE_APP_API_URL
+//   console.log('apiUrl', apiUrl)
+//   apiUrl = apiUrl || 'https://mm-production-1f2f.up.railway.app'
+//   if (!apiUrl) {
+//     console.warn('VITE_APP_API_URL is not defined. Using fallback URL.')
+//     // Fallback for development
+//     return 'https://mm-production-1f2f.up.railway.app'
+//   }
+//   return apiUrl
+// }
 
 export const guestAxios = axios.create({
   baseURL: 'https://mm-production-1f2f.up.railway.app',
