@@ -1,10 +1,10 @@
 import { useMutation } from '@tanstack/react-query'
-import { guestAxios } from '@/lib/api'
+import { authAxios } from '@/lib/api'
 
 export const useCreateToken = () => {
   return useMutation({
     mutationFn: async (data: { address: string; chainId: string; fee: number }) => {
-      const response = await guestAxios.post('/tokens', data)
+      const response = await authAxios.post('/bot-config/tokens', data)
       return response.data
     },
   })
