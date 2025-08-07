@@ -1,12 +1,23 @@
 import { useAuthStore } from '@/stores/authStore'
 import axios from 'axios'
 
+// Get API URL with fallback for development
+const getApiUrl = () => {
+  const apiUrl = import.meta.env.VITE_APP_API_URL
+  if (!apiUrl) {
+    console.warn('VITE_APP_API_URL is not defined. Using fallback URL.')
+    // Fallback for development
+    return 'http://localhost:3000'
+  }
+  return apiUrl
+}
+
 export const guestAxios = axios.create({
-  baseURL: import.meta.env.VITE_APP_API_URL,
+  baseURL: getApiUrl(),
 })
 
 export const authAxios = axios.create({
-  baseURL: import.meta.env.VITE_APP_API_URL,
+  baseURL: getApiUrl(),
 })
 
 authAxios.interceptors.request.use((config) => {
