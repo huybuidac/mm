@@ -1,4 +1,4 @@
-import { Expose } from 'class-transformer'
+import { Exclude, Expose } from 'class-transformer'
 import { ApiProperty } from '@nestjs/swagger'
 
 export class BotWalletEntity {
@@ -7,7 +7,7 @@ export class BotWalletEntity {
   address: string
 
   @ApiProperty()
-  @Expose()
+  @Exclude()
   privateKey: string
 
   @ApiProperty()
