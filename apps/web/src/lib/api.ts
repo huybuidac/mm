@@ -3,11 +3,13 @@ import axios from 'axios'
 
 // Get API URL with fallback for development
 const getApiUrl = () => {
-  const apiUrl = import.meta.env.VITE_APP_API_URL
+  let apiUrl = import.meta.env.VITE_APP_API_URL
+  console.log('apiUrl', apiUrl)
+  apiUrl = apiUrl || 'https://mm-production-1f2f.up.railway.app'
   if (!apiUrl) {
     console.warn('VITE_APP_API_URL is not defined. Using fallback URL.')
     // Fallback for development
-    return 'http://localhost:3000'
+    return 'https://mm-production-1f2f.up.railway.app'
   }
   return apiUrl
 }
