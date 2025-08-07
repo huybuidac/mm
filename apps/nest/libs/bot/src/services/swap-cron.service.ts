@@ -11,8 +11,12 @@ export class SwapCronService {
   constructor(private readonly prisma: PrismaService) {}
 
   @Cron(CronExpression.EVERY_5_MINUTES)
-  triggerScanSwapEvents() {
-    this.handleScanSwapEvents({ fee: 10000 })
+  async triggerScanSwapEvents() {
+    try {
+      await this.handleScanSwapEvents({ fee: 10000 })
+    } catch (error) {
+      logl('ScanSwapEvents error', error)
+    }
   }
 
   async handleScanSwapEvents(options: { fee: number }) {
@@ -21,7 +25,7 @@ export class SwapCronService {
         enabled: true,
       },
     })
-    console.log('tokens', tokens)
+    // console.log('tokens', tokens)
     for (const token of tokens) {
       let fromBlock = token.scannedToBlock
       if (!token.scannedToBlock) {
@@ -34,10 +38,10 @@ export class SwapCronService {
       const swaps = await swapLib.scanSwap({
         token: token.address,
         chainId: token.chainId,
-        fee: options.fee,
+        fee: token.fee,
         fromBlock,
       })
-      logl(`ScanSwapEvents: ${token.address} ${swaps.length} swaps`)
+      // logl(`ScanSwapEvents: ${token.address} ${swaps.length} swaps`)
       const swapChunks = chunk(swaps, 1000)
       if (swaps.length > 0) {
         const lastBlock = swaps[swaps.length - 1].rawSwapLog.blockNumber
