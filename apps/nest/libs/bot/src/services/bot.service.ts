@@ -147,6 +147,7 @@ export class BotService implements OnApplicationShutdown {
       include: {
         wallet: true,
       },
+      take: 1000,
     })
 
     if (tokenWallets.length === 0) {
@@ -225,8 +226,18 @@ export class BotService implements OnApplicationShutdown {
     let nextBuyAt = DateTime.now()
     let nextSellAt = DateTime.now().plus(sellConfig.delay || { minute: 10 })
 
-    console.log('startBot.startTime', options.token, jobId)
     set(this.jobTasks, [options.token, 'jobId'], jobId)
+    log(
+      `[${jobId}] start job:
+token: ${options.token}
+buyWallets: ${buyConfig.wallets.length}
+sellWallets: ${sellConfig.wallets.length}
+sellVolume: ${formatUnits(sellConfig.volume, 18)}
+sellOrder: ${sellConfig.totalOrder}
+buyVolume: ${formatUnits(buyConfig.volume, 18)}
+buyOrder: ${buyConfig.totalOrder}
+`,
+    )
     while (DateTime.now() < endTime && (buyConfig.totalOrder > 0 || sellConfig.totalOrder > 0)) {
       if (this.shutdown) {
         log(`[${jobId}] Bot stopped by shutdown`)
@@ -283,7 +294,7 @@ export class BotService implements OnApplicationShutdown {
             buyConfig.totalOrder -= 1n
             buyConfig.volume -= ethAmount
 
-            const swap = await this.storeSwapEvent({ swapEvent, token, chainId })
+            const swap = await this.storeSwapEvent({ swapEvent, token, chainId, jobId })
             const currentTime = DateTime.now()
             if (currentTime < endTime && buyConfig.totalOrder > 0) {
               const remain = endTime.diff(currentTime).as('seconds')
@@ -379,7 +390,7 @@ export class BotService implements OnApplicationShutdown {
               )
             }
 
-            const swap = await this.storeSwapEvent({ swapEvent, token, chainId })
+            const swap = await this.storeSwapEvent({ swapEvent, token, chainId, jobId })
             onData?.({
               jobId,
               swap,
@@ -440,7 +451,7 @@ export class BotService implements OnApplicationShutdown {
       sqrtPriceX96: swap.sqrtPriceX96.toString(),
       liquidity: fnHelper.decimal2BigInt(swap.liquidity).toString(),
     }
-    console.log('storeSwapEvent', x)
+    // console.log('storeSwapEvent', x)
     return x
   }
 
