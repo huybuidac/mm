@@ -83,7 +83,8 @@ export interface BotWalletEntity {
 export interface CreateBotTokenWalletsDto {
   tokenAddress: string
   wallets: {
-    privateKey: string
+    privateKey?: string
+    address: string
     buyable: boolean
     sellable: boolean
   }[]
