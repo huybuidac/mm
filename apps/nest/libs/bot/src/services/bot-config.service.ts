@@ -78,6 +78,7 @@ export class BotConfigService {
   async getAllTokenWallets(address: string) {
     const wallets = await this.prisma.botTokenWallet.findMany({
       where: { tokenAddress: address },
+      take: 1000,
     })
     return th.toInstancesSafe(BotTokenWalletEntity, wallets)
   }
