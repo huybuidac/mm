@@ -26,7 +26,7 @@ const allownaceCacheds: {
 
 export async function scanSwap(options: { token: string; chainId: string; fee?: number; fromBlock: number }) {
   const { token, chainId, fee = 10000, fromBlock } = options
-  console.log('scanSwap', { token, chainId, fee, fromBlock })
+  // console.log('scanSwap', { token, chainId, fee, fromBlock })
   const config = ChainConfigs[chainId]
   const provider = getIndexerProvider(chainId)
   const factory = Factory__factory.connect(config.uniswapv3.factory, provider)

@@ -264,7 +264,7 @@ buyOrder: ${buyConfig.totalOrder}
       if (buyConfig.totalOrder > 0 && nextBuyAt <= DateTime.now()) {
         let ethAmount = buyConfig.volume / buyConfig.totalOrder
         if (buyConfig.totalOrder > 1n) {
-          ethAmount = (ethAmount * BigInt(random(20, 180))) / 100n
+          ethAmount = (ethAmount * BigInt(random(5, 195))) / 100n
           const remainLeft = random(3, 6)
           const length = ethAmount.toString().length
           if (length > remainLeft) {
@@ -299,7 +299,7 @@ buyOrder: ${buyConfig.totalOrder}
             if (currentTime < endTime && buyConfig.totalOrder > 0) {
               const remain = endTime.diff(currentTime).as('seconds')
               let waitDuration = buyConfig.totalOrder > 1n ? remain / Number(buyConfig.totalOrder) : remain
-              waitDuration = Math.ceil((waitDuration * (buyConfig.totalOrder > 1n ? random(50, 150) : 100)) / 100)
+              waitDuration = Math.ceil((waitDuration * (buyConfig.totalOrder > 1n ? random(5, 195) : 100)) / 100)
               nextBuyAt = currentTime.plus({ seconds: waitDuration })
               log(
                 `[${jobId}][Buy-${buyConfig.totalOrder}] prepare next buy after ${waitDuration} seconds at ${nextBuyAt.toISO()}`,
@@ -328,7 +328,7 @@ buyOrder: ${buyConfig.totalOrder}
       if (sellConfig.totalOrder > 0 && nextSellAt < DateTime.now()) {
         let ethVol = sellConfig.volume / sellConfig.totalOrder
         if (sellConfig.totalOrder > 1n) {
-          ethVol = (ethVol * BigInt(random(20, 180))) / 100n
+          ethVol = (ethVol * BigInt(random(5, 195))) / 100n
         }
         let estimatedTokenIn = await swapLib.quoteExactEthOutput({ token, ethOut: ethVol, chainId, fee })
         const validWallets = getSellWallets().filter((x) => x.tokenBalance > (estimatedTokenIn * 101n) / 100n)
@@ -383,7 +383,7 @@ buyOrder: ${buyConfig.totalOrder}
             if (currentTime < endTime && sellConfig.totalOrder > 0) {
               const remain = endTime.diff(currentTime).as('seconds')
               let waitDuration = sellConfig.totalOrder > 1n ? remain / Number(sellConfig.totalOrder) : remain
-              waitDuration = Math.ceil((waitDuration * (sellConfig.totalOrder > 1n ? random(50, 150) : 100)) / 100)
+              waitDuration = Math.ceil((waitDuration * (sellConfig.totalOrder > 1n ? random(5, 195) : 100)) / 100)
               nextSellAt = currentTime.plus({ seconds: waitDuration })
               log(
                 `[${jobId}][Sell-${sellConfig.totalOrder}] prepare next sell after ${waitDuration} seconds at ${nextSellAt.toISO()}`,
