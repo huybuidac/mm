@@ -262,9 +262,14 @@ buyOrder: ${buyConfig.totalOrder}
       //   `[${jobId}] sellVolume: ${formatUnits(sellConfig.volume, 18)}, sellOrder: ${sellConfig.totalOrder}, buyVolume: ${formatUnits(buyConfig.volume, 18)}, buyOrder: ${buyConfig.totalOrder}`,
       // )
       if (buyConfig.totalOrder > 0 && nextBuyAt <= DateTime.now()) {
+        const maxWalletEth = getBuyWallets().reduce((acc, x) => (acc > x.ethBalance ? acc : x.ethBalance), 0n)
         let ethAmount = buyConfig.volume / buyConfig.totalOrder
+        const topPercent = Math.floor(Number((maxWalletEth * 100n) / ethAmount))
+        logl(
+          `[${jobId}][Buy] ethAmount: ${formatUnits(ethAmount, 18)}, maxWalletEth: ${formatUnits(maxWalletEth, 18)} => topPercent= ${topPercent}`,
+        )
         if (buyConfig.totalOrder > 1n) {
-          ethAmount = (ethAmount * BigInt(random(5, 195))) / 100n
+          ethAmount = (ethAmount * BigInt(random(5, topPercent))) / 100n
           const remainLeft = random(3, 6)
           const length = ethAmount.toString().length
           if (length > remainLeft) {
