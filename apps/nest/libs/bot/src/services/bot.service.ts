@@ -264,8 +264,8 @@ buyOrder: ${buyConfig.totalOrder}
       if (buyConfig.totalOrder > 0 && nextBuyAt <= DateTime.now()) {
         const maxWalletEth = getBuyWallets().reduce((acc, x) => (acc > x.ethBalance ? acc : x.ethBalance), 0n)
         let ethAmount = buyConfig.volume / buyConfig.totalOrder
-        const topPercent = Math.floor(Number((maxWalletEth * 100n) / ethAmount))
-        logl(
+        const topPercent = Math.min(195, Math.floor(Number((maxWalletEth * 100n) / ethAmount)))
+        log(
           `[${jobId}][Buy] ethAmount: ${formatUnits(ethAmount, 18)}, maxWalletEth: ${formatUnits(maxWalletEth, 18)} => topPercent= ${topPercent}`,
         )
         if (buyConfig.totalOrder > 1n) {
