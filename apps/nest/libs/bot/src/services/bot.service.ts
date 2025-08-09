@@ -11,7 +11,7 @@ import { logl } from '@app/helper/log.helper'
 import { PrismaService } from 'nestjs-prisma'
 import randomstring from 'randomstring'
 import { StartBotDto } from '../dtos/start-bot.dto'
-import { Observable, Subscriber } from 'rxjs'
+import { finalize, Observable, Subscriber } from 'rxjs'
 import { TokenSwap } from '@prisma/client'
 import { fnHelper } from '@app/helper/fn.helper'
 import { th } from '@app/helper/transform.helper'
@@ -124,10 +124,17 @@ export class BotService implements OnApplicationShutdown {
         jobTask.status = 'stopped'
       })
     set(this.jobTasks, [tokenAddress], jobTask)
+    let _subscriber: Subscriber<CustomMessageEvent> | null = null
     return new Observable<CustomMessageEvent>((subscriber: Subscriber<CustomMessageEvent>) => {
+      _subscriber = subscriber
       jobTask.status = 'running'
       jobTask.subscribers.push(subscriber)
-    })
+    }).pipe(
+      finalize(() => {
+        jobTask.subscribers = jobTask.subscribers.filter((s) => s !== _subscriber)
+        console.log('startBot.finalize', jobTask.subscribers.length)
+      }),
+    )
   }
 
   async processStream(tokenAddress: string, dto: StartBotDto) {
@@ -147,6 +154,7 @@ export class BotService implements OnApplicationShutdown {
       include: {
         wallet: true,
       },
+      take: 1000,
     })
 
     if (tokenWallets.length === 0) {
@@ -192,16 +200,20 @@ export class BotService implements OnApplicationShutdown {
       ({ jobId, message }) => {
         logl(message)
         get(this.jobTasks, [tokenAddress])?.subscribers?.forEach((subscriber) => {
-          subscriber.next({
-            data: { jobId, message },
-          })
+          if (!subscriber.closed) {
+            subscriber.next({
+              data: { jobId, message },
+            })
+          }
         })
       },
       ({ swap, state, jobId }) => {
         get(this.jobTasks, [tokenAddress])?.subscribers?.forEach((subscriber) => {
-          subscriber.next({
-            data: { swap, state, jobId },
-          })
+          if (!subscriber.closed) {
+            subscriber.next({
+              data: { swap, state, jobId },
+            })
+          }
         })
       },
     )
@@ -225,8 +237,19 @@ export class BotService implements OnApplicationShutdown {
     let nextBuyAt = DateTime.now()
     let nextSellAt = DateTime.now().plus(sellConfig.delay || { minute: 10 })
 
-    console.log('startBot.startTime', options.token, jobId)
     set(this.jobTasks, [options.token, 'jobId'], jobId)
+    log(
+      `[${jobId}] start job:
+token: ${options.token}
+buyWallets: ${buyConfig.wallets.length}
+sellWallets: ${sellConfig.wallets.length}
+sellVolume: ${formatUnits(sellConfig.volume, 18)}
+sellOrder: ${sellConfig.totalOrder}
+buyVolume: ${formatUnits(buyConfig.volume, 18)}
+buyOrder: ${buyConfig.totalOrder}
+`,
+    )
+    let i = 1
     while (DateTime.now() < endTime && (buyConfig.totalOrder > 0 || sellConfig.totalOrder > 0)) {
       if (this.shutdown) {
         log(`[${jobId}] Bot stopped by shutdown`)
@@ -235,6 +258,18 @@ export class BotService implements OnApplicationShutdown {
       if (get(this.jobTasks, [options.token, 'jobId']) !== jobId) {
         log(`[${jobId}] Bot stopped by another job`)
         break
+      }
+      if (i++ % 60 === 0) {
+        logl(
+          `[${jobId}] ${{
+            buyVolume: formatUnits(buyConfig.volume, 18),
+            buyOrder: buyConfig.totalOrder,
+            sellVolume: formatUnits(sellConfig.volume, 18),
+            sellOrder: sellConfig.totalOrder,
+            nextBuyAt: nextBuyAt.toISO(),
+            nextSellAt: nextSellAt.toISO(),
+          }}`,
+        )
       }
       onData?.({
         jobId,
@@ -251,9 +286,14 @@ export class BotService implements OnApplicationShutdown {
       //   `[${jobId}] sellVolume: ${formatUnits(sellConfig.volume, 18)}, sellOrder: ${sellConfig.totalOrder}, buyVolume: ${formatUnits(buyConfig.volume, 18)}, buyOrder: ${buyConfig.totalOrder}`,
       // )
       if (buyConfig.totalOrder > 0 && nextBuyAt <= DateTime.now()) {
+        const maxWalletEth = getBuyWallets().reduce((acc, x) => (acc > x.ethBalance ? acc : x.ethBalance), 0n)
         let ethAmount = buyConfig.volume / buyConfig.totalOrder
+        const topPercent = Math.min(195, Math.floor(Number((maxWalletEth * 100n) / ethAmount)))
+        log(
+          `[${jobId}][Buy] ethAmount: ${formatUnits(ethAmount, 18)}, maxWalletEth: ${formatUnits(maxWalletEth, 18)} => topPercent= ${topPercent}`,
+        )
         if (buyConfig.totalOrder > 1n) {
-          ethAmount = (ethAmount * BigInt(random(20, 180))) / 100n
+          ethAmount = (ethAmount * BigInt(random(5, topPercent))) / 100n
           const remainLeft = random(3, 6)
           const length = ethAmount.toString().length
           if (length > remainLeft) {
@@ -283,12 +323,12 @@ export class BotService implements OnApplicationShutdown {
             buyConfig.totalOrder -= 1n
             buyConfig.volume -= ethAmount
 
-            const swap = await this.storeSwapEvent({ swapEvent, token, chainId })
+            const swap = await this.storeSwapEvent({ swapEvent, token, chainId, jobId })
             const currentTime = DateTime.now()
             if (currentTime < endTime && buyConfig.totalOrder > 0) {
               const remain = endTime.diff(currentTime).as('seconds')
               let waitDuration = buyConfig.totalOrder > 1n ? remain / Number(buyConfig.totalOrder) : remain
-              waitDuration = Math.ceil((waitDuration * (buyConfig.totalOrder > 1n ? random(50, 150) : 100)) / 100)
+              waitDuration = Math.ceil((waitDuration * (buyConfig.totalOrder > 1n ? random(5, 195) : 100)) / 100)
               nextBuyAt = currentTime.plus({ seconds: waitDuration })
               log(
                 `[${jobId}][Buy-${buyConfig.totalOrder}] prepare next buy after ${waitDuration} seconds at ${nextBuyAt.toISO()}`,
@@ -317,7 +357,7 @@ export class BotService implements OnApplicationShutdown {
       if (sellConfig.totalOrder > 0 && nextSellAt < DateTime.now()) {
         let ethVol = sellConfig.volume / sellConfig.totalOrder
         if (sellConfig.totalOrder > 1n) {
-          ethVol = (ethVol * BigInt(random(20, 180))) / 100n
+          ethVol = (ethVol * BigInt(random(5, 195))) / 100n
         }
         let estimatedTokenIn = await swapLib.quoteExactEthOutput({ token, ethOut: ethVol, chainId, fee })
         const validWallets = getSellWallets().filter((x) => x.tokenBalance > (estimatedTokenIn * 101n) / 100n)
@@ -366,20 +406,20 @@ export class BotService implements OnApplicationShutdown {
             randomWallet.ethBalance += swapEvent.ethAmount
             randomWallet.tokenBalance -= swapEvent.tokenAmount
             sellConfig.totalOrder -= 1n
-            sellConfig.volume += swapEvent.ethAmount
+            sellConfig.volume -= swapEvent.ethAmount
 
             const currentTime = DateTime.now()
             if (currentTime < endTime && sellConfig.totalOrder > 0) {
               const remain = endTime.diff(currentTime).as('seconds')
               let waitDuration = sellConfig.totalOrder > 1n ? remain / Number(sellConfig.totalOrder) : remain
-              waitDuration = Math.ceil((waitDuration * (sellConfig.totalOrder > 1n ? random(50, 150) : 100)) / 100)
+              waitDuration = Math.ceil((waitDuration * (sellConfig.totalOrder > 1n ? random(5, 195) : 100)) / 100)
               nextSellAt = currentTime.plus({ seconds: waitDuration })
               log(
                 `[${jobId}][Sell-${sellConfig.totalOrder}] prepare next sell after ${waitDuration} seconds at ${nextSellAt.toISO()}`,
               )
             }
 
-            const swap = await this.storeSwapEvent({ swapEvent, token, chainId })
+            const swap = await this.storeSwapEvent({ swapEvent, token, chainId, jobId })
             onData?.({
               jobId,
               swap,
@@ -440,7 +480,7 @@ export class BotService implements OnApplicationShutdown {
       sqrtPriceX96: swap.sqrtPriceX96.toString(),
       liquidity: fnHelper.decimal2BigInt(swap.liquidity).toString(),
     }
-    console.log('storeSwapEvent', x)
+    // console.log('storeSwapEvent', x)
     return x
   }
 
