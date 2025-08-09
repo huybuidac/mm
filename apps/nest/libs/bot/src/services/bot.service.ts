@@ -281,8 +281,8 @@ buyOrder: ${buyConfig.totalOrder}
       onData?.({
         jobId,
         state: {
-          soldVolume: 0,
-          boughtVolume: 0,
+          soldVolume: fnHelper.fromDecimals(sellConfig.processedVolume, 18).toUnsafeFloat(),
+          boughtVolume: fnHelper.fromDecimals(buyConfig.processedVolume, 18).toUnsafeFloat(),
           remainSellOrder: Number(sellConfig.totalOrder),
           remainBuyOrder: Number(buyConfig.totalOrder),
           remainSellVolume: fnHelper.fromDecimals(sellConfig.volume, 18).toUnsafeFloat(),
