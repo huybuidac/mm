@@ -38,12 +38,14 @@ interface StartOptions {
     wallets: ethers.Wallet[]
     volume: bigint
     totalOrder: bigint
+    processedVolume?: bigint
     delay?: Duration
   }
   buyConfig: {
     wallets: ethers.Wallet[]
     volume: bigint
     totalOrder: bigint
+    processedVolume?: bigint
   }
   duration: Duration
 }
@@ -54,6 +56,8 @@ export interface CustomMessageEvent {
     message?: string
     swap?: any
     state?: {
+      soldVolume: number
+      boughtVolume: number
       remainSellOrder: number
       remainBuyOrder: number
       remainSellVolume: number
@@ -237,6 +241,9 @@ export class BotService implements OnApplicationShutdown {
     let nextBuyAt = DateTime.now()
     let nextSellAt = DateTime.now().plus(sellConfig.delay || { minute: 10 })
 
+    options.sellConfig.processedVolume = BigInt(0)
+    options.buyConfig.processedVolume = BigInt(0)
+
     set(this.jobTasks, [options.token, 'jobId'], jobId)
     log(
       `[${jobId}] start job:
@@ -274,6 +281,8 @@ buyOrder: ${buyConfig.totalOrder}
       onData?.({
         jobId,
         state: {
+          soldVolume: 0,
+          boughtVolume: 0,
           remainSellOrder: Number(sellConfig.totalOrder),
           remainBuyOrder: Number(buyConfig.totalOrder),
           remainSellVolume: fnHelper.fromDecimals(sellConfig.volume, 18).toUnsafeFloat(),
@@ -322,6 +331,7 @@ buyOrder: ${buyConfig.totalOrder}
             randomWallet.tokenBalance += swapEvent.tokenAmount
             buyConfig.totalOrder -= 1n
             buyConfig.volume -= ethAmount
+            buyConfig.processedVolume += ethAmount
 
             const swap = await this.storeSwapEvent({ swapEvent, token, chainId, jobId })
             const currentTime = DateTime.now()
@@ -338,6 +348,8 @@ buyOrder: ${buyConfig.totalOrder}
               jobId,
               swap,
               state: {
+                soldVolume: fnHelper.fromDecimals(sellConfig.processedVolume, 18).toUnsafeFloat(),
+                boughtVolume: fnHelper.fromDecimals(buyConfig.processedVolume, 18).toUnsafeFloat(),
                 remainSellOrder: Number(sellConfig.totalOrder),
                 remainBuyOrder: Number(buyConfig.totalOrder),
                 remainSellVolume: fnHelper.fromDecimals(sellConfig.volume, 18).toUnsafeFloat(),
@@ -407,6 +419,7 @@ buyOrder: ${buyConfig.totalOrder}
             randomWallet.tokenBalance -= swapEvent.tokenAmount
             sellConfig.totalOrder -= 1n
             sellConfig.volume -= swapEvent.ethAmount
+            sellConfig.processedVolume += swapEvent.ethAmount
 
             const currentTime = DateTime.now()
             if (currentTime < endTime && sellConfig.totalOrder > 0) {
@@ -424,6 +437,8 @@ buyOrder: ${buyConfig.totalOrder}
               jobId,
               swap,
               state: {
+                soldVolume: fnHelper.fromDecimals(sellConfig.processedVolume, 18).toUnsafeFloat(),
+                boughtVolume: fnHelper.fromDecimals(buyConfig.processedVolume, 18).toUnsafeFloat(),
                 remainSellOrder: Number(sellConfig.totalOrder),
                 remainBuyOrder: Number(buyConfig.totalOrder),
                 remainSellVolume: fnHelper.fromDecimals(sellConfig.volume, 18).toUnsafeFloat(),
