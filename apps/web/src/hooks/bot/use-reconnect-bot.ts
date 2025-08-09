@@ -2,10 +2,13 @@ import { useAuthStore } from '@/stores/authStore'
 import { useTokenStore } from '@/stores/tokenStore'
 import { useMutation } from '@tanstack/react-query'
 import { EventSourcePolyfill } from 'event-source-polyfill'
+import { useState } from 'react'
 
 export const useReconnectBot = () => {
   const { addLog, addSwap, setTokenState } = useTokenStore()
   const auth = useAuthStore()
+
+  const [_es, setEventSource] = useState<EventSourcePolyfill | null>(null)
 
   return useMutation({
     mutationFn: (tokenAddress: string) => {
@@ -18,6 +21,8 @@ export const useReconnectBot = () => {
             },
           }
         )
+        _es?.close()
+        setEventSource(eventSource)
         eventSource.onmessage = (event) => {
           // console.log('useReconnectBot.onmessage', event)
           if (event.lastEventId === 'END') {
