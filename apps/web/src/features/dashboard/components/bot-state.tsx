@@ -11,6 +11,8 @@ interface BotStateProps {
     remainBuyVolume: number
     nextBuyAt: string
     nextSellAt: string
+    soldVolume: number
+    boughtVolume: number
   }
 }
 
@@ -65,6 +67,13 @@ export function BotState({ state }: BotStateProps) {
               <IconTrendingUp className="h-4 w-4 text-green-600" />
               <h3 className="font-semibold text-green-600">Buy Orders</h3>
             </div>
+
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">Bought Volume:</span>
+              <Badge variant="outline" className="font-mono">
+                {formatVolume(state.boughtVolume)}
+              </Badge>
+            </div>
             
             <div className="space-y-3">
               <div className="flex justify-between items-center">
@@ -98,6 +107,13 @@ export function BotState({ state }: BotStateProps) {
             <div className="flex items-center gap-2">
               <IconTrendingDown className="h-4 w-4 text-red-600" />
               <h3 className="font-semibold text-red-600">Sell Orders</h3>
+            </div>
+
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">Sold Volume:</span>
+              <Badge variant="outline" className="font-mono">
+                {formatVolume(state.soldVolume)}
+              </Badge>
             </div>
             
             <div className="space-y-3">
