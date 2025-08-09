@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   IconPlayerPlay,
   IconSettings,
   IconPlayerStop,
 } from '@tabler/icons-react'
+import { useTokenStore } from '@/stores/tokenStore'
 import { BotTokenEntity } from '@/lib/api'
+import { useReconnectBot } from '@/hooks/bot/use-reconnect-bot'
 import { useStartBot, StartBotArgs } from '@/hooks/bot/use-start-bot'
 import { useStopBot } from '@/hooks/bot/use-stop-bot'
 import {
@@ -28,9 +30,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
-import { useTokenStore } from '@/stores/tokenStore'
 import { BotState } from './bot-state'
-import { useReconnectBot } from '@/hooks/bot/use-reconnect-bot'
 
 const CHAIN_OPTIONS = [
   { value: '2741', label: 'Abstract Mainnet' },
@@ -39,7 +39,7 @@ const CHAIN_OPTIONS = [
 
 export function StartBot({ token }: { token: BotTokenEntity }) {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
-  const tokenData = useTokenStore(state => state.tokenData[token.address])
+  const tokenData = useTokenStore((state) => state.tokenData[token.address])
 
   const [formData, setFormData] = useState({
     token: token.address,
@@ -56,6 +56,13 @@ export function StartBot({ token }: { token: BotTokenEntity }) {
   const { mutate: startBot, isPending: isBotRunning } = useStartBot() // the running until finish
   const { mutate: stopBot, isPending: isStopping } = useStopBot()
   const { mutate: reconnectBot, isPending: isBotReRunning } = useReconnectBot()
+
+  useEffect(() => {
+    if (!isBotRunning && !isBotReRunning) {
+      reconnectBot(token.address)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleInputChange = (
     field: keyof StartBotArgs,
@@ -231,9 +238,7 @@ export function StartBot({ token }: { token: BotTokenEntity }) {
       </Card>
 
       {/* Bot State */}
-      {tokenData?.state && (
-        <BotState state={tokenData.state} />
-      )}
+      {tokenData?.state && <BotState state={tokenData.state} />}
 
       {/* Action Button */}
       <div className='flex justify-end gap-2'>
@@ -266,8 +271,6 @@ export function StartBot({ token }: { token: BotTokenEntity }) {
           Reconnect Bot
         </Button>
       </div>
-
-      
 
       {/* Confirmation Dialog */}
       <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>

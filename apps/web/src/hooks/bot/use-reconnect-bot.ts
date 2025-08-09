@@ -19,7 +19,7 @@ export const useReconnectBot = () => {
           }
         )
         eventSource.onmessage = (event) => {
-          console.log('useReconnectBot.onmessage', event)
+          // console.log('useReconnectBot.onmessage', event)
           if (event.lastEventId === 'END') {
             resolve(true)
             eventSource.close()
