@@ -16,6 +16,8 @@ export interface TokenStoreState {
         remainBuyVolume: number
         nextBuyAt: string
         nextSellAt: string
+        soldVolume: number
+        boughtVolume: number
       }
     }
   }
