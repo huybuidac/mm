@@ -254,7 +254,7 @@ export function StartBot({ token }: { token: BotTokenEntity }) {
         </Button>
         <Button
           onClick={() => setShowConfirmDialog(true)}
-          disabled={!validateForm() || isBotRunning}
+          disabled={!validateForm() || isBotRunning || isBotReRunning}
           size='lg'
           className='min-w-[200px]'
         >
