@@ -11,7 +11,7 @@ import { logl } from '@app/helper/log.helper'
 import { PrismaService } from 'nestjs-prisma'
 import randomstring from 'randomstring'
 import { StartBotDto } from '../dtos/start-bot.dto'
-import { Observable, Subscriber } from 'rxjs'
+import { finalize, Observable, Subscriber } from 'rxjs'
 import { TokenSwap } from '@prisma/client'
 import { fnHelper } from '@app/helper/fn.helper'
 import { th } from '@app/helper/transform.helper'
@@ -124,10 +124,17 @@ export class BotService implements OnApplicationShutdown {
         jobTask.status = 'stopped'
       })
     set(this.jobTasks, [tokenAddress], jobTask)
+    let _subscriber: Subscriber<CustomMessageEvent> | null = null
     return new Observable<CustomMessageEvent>((subscriber: Subscriber<CustomMessageEvent>) => {
+      _subscriber = subscriber
       jobTask.status = 'running'
       jobTask.subscribers.push(subscriber)
-    })
+    }).pipe(
+      finalize(() => {
+        jobTask.subscribers = jobTask.subscribers.filter((s) => s !== _subscriber)
+        console.log('startBot.finalize', jobTask.subscribers.length)
+      }),
+    )
   }
 
   async processStream(tokenAddress: string, dto: StartBotDto) {
@@ -193,16 +200,20 @@ export class BotService implements OnApplicationShutdown {
       ({ jobId, message }) => {
         logl(message)
         get(this.jobTasks, [tokenAddress])?.subscribers?.forEach((subscriber) => {
-          subscriber.next({
-            data: { jobId, message },
-          })
+          if (!subscriber.closed) {
+            subscriber.next({
+              data: { jobId, message },
+            })
+          }
         })
       },
       ({ swap, state, jobId }) => {
         get(this.jobTasks, [tokenAddress])?.subscribers?.forEach((subscriber) => {
-          subscriber.next({
-            data: { swap, state, jobId },
-          })
+          if (!subscriber.closed) {
+            subscriber.next({
+              data: { swap, state, jobId },
+            })
+          }
         })
       },
     )
@@ -238,6 +249,7 @@ buyVolume: ${formatUnits(buyConfig.volume, 18)}
 buyOrder: ${buyConfig.totalOrder}
 `,
     )
+    let i = 1
     while (DateTime.now() < endTime && (buyConfig.totalOrder > 0 || sellConfig.totalOrder > 0)) {
       if (this.shutdown) {
         log(`[${jobId}] Bot stopped by shutdown`)
@@ -246,6 +258,18 @@ buyOrder: ${buyConfig.totalOrder}
       if (get(this.jobTasks, [options.token, 'jobId']) !== jobId) {
         log(`[${jobId}] Bot stopped by another job`)
         break
+      }
+      if (i++ % 60 === 0) {
+        logl(
+          `[${jobId}] ${{
+            buyVolume: formatUnits(buyConfig.volume, 18),
+            buyOrder: buyConfig.totalOrder,
+            sellVolume: formatUnits(sellConfig.volume, 18),
+            sellOrder: sellConfig.totalOrder,
+            nextBuyAt: nextBuyAt.toISO(),
+            nextSellAt: nextSellAt.toISO(),
+          }}`,
+        )
       }
       onData?.({
         jobId,
@@ -382,7 +406,7 @@ buyOrder: ${buyConfig.totalOrder}
             randomWallet.ethBalance += swapEvent.ethAmount
             randomWallet.tokenBalance -= swapEvent.tokenAmount
             sellConfig.totalOrder -= 1n
-            sellConfig.volume += swapEvent.ethAmount
+            sellConfig.volume -= swapEvent.ethAmount
 
             const currentTime = DateTime.now()
             if (currentTime < endTime && sellConfig.totalOrder > 0) {
