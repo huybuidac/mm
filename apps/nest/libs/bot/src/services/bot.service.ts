@@ -113,6 +113,7 @@ export class BotService implements OnApplicationShutdown {
       throw new BadRequestException('Bot is already running')
     }
     jobTask = { task: this.processStream(tokenAddress, dto), status: 'idle', subscribers: [] }
+    set(this.jobTasks, [tokenAddress], jobTask)
     jobTask.task
       .then(() => {
         jobTask.subscribers?.forEach((subscriber) => {
@@ -127,7 +128,6 @@ export class BotService implements OnApplicationShutdown {
       .finally(() => {
         jobTask.status = 'stopped'
       })
-    set(this.jobTasks, [tokenAddress], jobTask)
     let _subscriber: Subscriber<CustomMessageEvent> | null = null
     return new Observable<CustomMessageEvent>((subscriber: Subscriber<CustomMessageEvent>) => {
       _subscriber = subscriber
