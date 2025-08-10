@@ -30,7 +30,6 @@ export class BotController {
     @Query() startBotDto: any,
     @Request() req: Request,
   ): Observable<CustomMessageEvent> {
-    console.log('BotController.startBot', tokenAddress, startBotDto)
     return this.botService.startBot(tokenAddress, startBotDto)
   }
 

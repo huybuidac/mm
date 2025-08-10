@@ -107,25 +107,32 @@ export class BotService implements OnApplicationShutdown {
     })
   }
 
+  globalId = 1
   startBot(tokenAddress: string, dto: StartBotDto) {
     let jobTask = get(this.jobTasks, [tokenAddress])
     if (jobTask?.status === 'running') {
       throw new BadRequestException('Bot is already running')
     }
+    const id = this.globalId++
+    logl(`[${id}] BotService.startBot`, tokenAddress, dto)
     jobTask = { task: this.processStream(tokenAddress, dto), status: 'idle', subscribers: [] }
     set(this.jobTasks, [tokenAddress], jobTask)
     jobTask.task
       .then(() => {
+        logl(`[${id}] BotService.startBot.then`, tokenAddress)
         jobTask.subscribers?.forEach((subscriber) => {
           subscriber.complete()
         })
       })
       .catch((error) => {
+        logl(`[${id}] BotService.startBot.catch`, tokenAddress, jobTask.subscribers?.length, error.message)
+        console.error(error)
         jobTask.subscribers?.forEach((subscriber) => {
           subscriber.error(error)
         })
       })
       .finally(() => {
+        logl(`[${id}] BotService.startBot.finally`, tokenAddress)
         jobTask.status = 'stopped'
       })
     let _subscriber: Subscriber<CustomMessageEvent> | null = null
@@ -136,7 +143,7 @@ export class BotService implements OnApplicationShutdown {
     }).pipe(
       finalize(() => {
         jobTask.subscribers = jobTask.subscribers.filter((s) => s !== _subscriber)
-        console.log('startBot.finalize', jobTask.subscribers.length)
+        logl(`[${id}] BotService.startBot.finalize`, jobTask.subscribers.length)
       }),
     )
   }
