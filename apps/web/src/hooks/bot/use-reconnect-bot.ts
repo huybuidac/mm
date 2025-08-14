@@ -1,3 +1,4 @@
+import { API_URL } from '@/lib/api'
 import { useAuthStore } from '@/stores/authStore'
 import { useTokenStore } from '@/stores/tokenStore'
 import { useMutation } from '@tanstack/react-query'
