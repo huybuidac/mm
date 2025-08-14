@@ -14,6 +14,8 @@ import axios from 'axios'
 //   return apiUrl
 // }
 
+console.log('import.meta.env.VITE_APP_API_URL', import.meta.env.VITE_APP_API_URL)
+
 export const guestAxios = axios.create({
   baseURL: 'https://mm-production-1f2f.up.railway.app',
 })

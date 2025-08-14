@@ -133,10 +133,17 @@ export function WalletConfigs(options: { tokenAddress: string, chainId: string }
     }
     
     return false
-  }, [existingWallets, mergedWallets])
+  }, [existingWallets, mergedWallets, parsedWallets.length])
 
   const ethBalances = useWalletEthBalances({ addresses: mergedWallets.map(wallet => wallet.address), chainId: chainId })
   const erc20Balances = useWalletErc20Balances({ addresses: mergedWallets.map(wallet => wallet.address), chainId: chainId, tokenAddress: tokenAddress })
+
+  // const totalEthBalance = useMemo(() => {
+  //   return mergedWallets.reduce((acc, wallet) => acc + (ethBalances[wallet.address] ?? 0n), 0n)
+  // }, [mergedWallets, ethBalances])
+  // const totalErc20Balance = useMemo(() => {
+  //   return mergedWallets.reduce((acc, wallet) => acc + (erc20Balances[wallet.address] ?? 0n), 0n)
+  // }, [mergedWallets, erc20Balances])
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
