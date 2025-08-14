@@ -3,6 +3,7 @@ import { EventSourcePolyfill } from 'event-source-polyfill'
 import { useAuthStore } from '@/stores/authStore'
 import { useTokenStore } from '@/stores/tokenStore'
 import { fnHelper } from '@/lib/fn.helper'
+import { API_URL } from '@/lib/api'
 
 export interface StartBotArgs {
   token: string
@@ -39,7 +40,7 @@ export const useStartBot = () => {
         }
         const queryStr = new URLSearchParams(query).toString()
         const eventSource = new EventSourcePolyfill(
-          `https://mm-production-1f2f.up.railway.app/bot/start/${data.token}?${queryStr}`,
+          `${API_URL}/bot/start/${data.token}?${queryStr}`,
           {
             headers: {
               Authorization: `Bearer ${auth.jwt}`,

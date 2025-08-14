@@ -14,7 +14,7 @@ export const useReconnectBot = () => {
     mutationFn: (tokenAddress: string) => {
       return new Promise((resolve, reject) => {
         const eventSource = new EventSourcePolyfill(
-          `https://mm-production-1f2f.up.railway.app/bot/reconnect/${tokenAddress}`,
+          `${API_URL}/bot/reconnect/${tokenAddress}`,
           {
             headers: {
               Authorization: `Bearer ${auth.jwt}`,

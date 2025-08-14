@@ -1,6 +1,8 @@
 import { useAuthStore } from '@/stores/authStore'
 import axios from 'axios'
 
+export const API_URL = import.meta.env.VITE_APP_API_URL || 'https://mm-production-1f2f.up.railway.app'
+
 // Get API URL with fallback for development
 // const getApiUrl = () => {
 //   let apiUrl = import.meta.env.VITE_APP_API_URL
@@ -14,14 +16,14 @@ import axios from 'axios'
 //   return apiUrl
 // }
 
-console.log('import.meta.env.VITE_APP_API_URL', import.meta.env.VITE_APP_API_URL)
+// console.log('import.meta.env.VITE_APP_API_URL', import.meta.env.VITE_APP_API_URL)
 
 export const guestAxios = axios.create({
-  baseURL: 'https://mm-production-1f2f.up.railway.app',
+  baseURL: API_URL,
 })
 
 export const authAxios = axios.create({
-  baseURL: 'https://mm-production-1f2f.up.railway.app',
+  baseURL: API_URL,
 })
 
 authAxios.interceptors.request.use((config) => {
