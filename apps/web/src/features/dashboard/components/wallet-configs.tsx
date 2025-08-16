@@ -164,7 +164,7 @@ export function WalletConfigs(options: { tokenAddress: string, chainId: string }
   const { data: totalTokenValue } = useQuoteExactTokenIn({ token: tokenAddress, tokenIn: totalErc20Balance.toString(), chainId, fee: token?.fee })
 
   const pnl = useMemo(() => {
-    return BigInt(token?.investedEth || '0') + BigInt(totalTokenValue || 0) - totalEthBalance
+    return (BigInt(totalTokenValue || 0) + totalEthBalance) - BigInt(token?.investedEth || '0')
   }, [totalTokenValue, totalEthBalance, token?.investedEth])
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
