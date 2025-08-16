@@ -23,6 +23,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { useTokenStore } from '@/stores/tokenStore'
+import { FormatedOnchainNumber } from '@/components/formated-onchain-number'
 
 const CHAIN_OPTIONS = [
   { value: '2741', label: 'Abstract Mainnet', defaultFee: 10000 },
@@ -174,6 +175,7 @@ export function TokenSettings() {
                 <TableHead>Token Address</TableHead>
                 <TableHead>Chain</TableHead>
                 <TableHead>Fee</TableHead>
+                <TableHead>Invested ETH</TableHead>
                 <TableHead>Enabled</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -205,6 +207,11 @@ export function TokenSettings() {
                   </TableCell>
                   <TableCell>
                     <span className="text-sm font-mono">{token.fee}</span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-sm font-mono">
+                      <FormatedOnchainNumber value={BigInt(token.investedEth || '0')} />
+                    </span>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center space-x-2">

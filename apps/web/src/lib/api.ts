@@ -64,6 +64,7 @@ export interface BotTokenEntity {
   chainId: string
   enabled: boolean
   fee: number
+  investedEth: string
   createdAt: string
   updatedAt: string
 }
