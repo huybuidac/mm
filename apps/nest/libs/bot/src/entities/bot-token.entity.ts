@@ -1,5 +1,6 @@
-import { Expose } from 'class-transformer'
+import { Expose, Transform } from 'class-transformer'
 import { ApiProperty } from '@nestjs/swagger'
+import { Decimal } from '@prisma/client/runtime/library'
 
 export class BotTokenEntity {
   @ApiProperty()
@@ -17,6 +18,11 @@ export class BotTokenEntity {
   @ApiProperty()
   @Expose()
   fee: number
+
+  @ApiProperty()
+  @Expose()
+  @Transform(({ value }) => value.toString())
+  investedEth: Decimal
 
   @ApiProperty()
   @Expose()

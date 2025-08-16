@@ -1,3 +1,4 @@
+import { API_URL } from '@/lib/api'
 import { useAuthStore } from '@/stores/authStore'
 import { useTokenStore } from '@/stores/tokenStore'
 import { useMutation } from '@tanstack/react-query'
@@ -14,7 +15,7 @@ export const useReconnectBot = () => {
     mutationFn: (tokenAddress: string) => {
       return new Promise((resolve, reject) => {
         const eventSource = new EventSourcePolyfill(
-          `https://mm-production-1f2f.up.railway.app/bot/reconnect/${tokenAddress}`,
+          `${API_URL}/bot/reconnect/${tokenAddress}`,
           {
             headers: {
               Authorization: `Bearer ${auth.jwt}`,

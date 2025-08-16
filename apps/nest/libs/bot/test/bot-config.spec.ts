@@ -251,4 +251,54 @@ describe('BotConfigSpec', () => {
       expect(res2.body[0].sellable).toBe(true)
     })
   })
+
+  describe('UpdateTokenInvestedEth', () => {
+    let testToken: BotToken
+
+    beforeAll(async () => {
+      const wallet = ethers.Wallet.createRandom()
+      const tokenAddress = wallet.address
+      const res = await uc
+        .request((r) => r.post('/bot-config/tokens'))
+        .send({
+          address: tokenAddress,
+          chainId: '1',
+          fee: 500,
+        } as CreateBotTokenDto)
+      testToken = res.body
+    })
+
+    test('UpdateTokenInvestedEth:InvestedEthIsRequired', async () => {
+      const res = await uc.request((r) => r.patch(`/bot-config/tokens/${testToken.address}/invested-eth`)).send({})
+      expect(res).toBeBad(/investedEth should not be empty/)
+    })
+
+    test('UpdateTokenInvestedEth:Success', async () => {
+      const newInvestedEth = '5000000000000000000' // 5 ETH in wei
+      const res = await uc
+        .request((r) => r.patch(`/bot-config/tokens/${testToken.address}/invested-eth`))
+        .send({
+          investedEth: newInvestedEth,
+        })
+
+      expect(res).toBeOK()
+      expect(res.body.address).toBe(testToken.address)
+      expect(res.body.investedEth).toBe(newInvestedEth)
+      expect(res.body.updatedAt).toBeDefined()
+
+      // Verify the token was actually updated in the database
+      const updatedToken = await uc.request((r) => r.get(`/bot-config/tokens/${testToken.address}`))
+      expect(updatedToken.body.investedEth).toBe(newInvestedEth)
+    })
+
+    test('UpdateTokenInvestedEth:TokenNotFound', async () => {
+      const nonExistentAddress = '0x9999999999999999999999999999999999999999'
+      const res = await uc
+        .request((r) => r.patch(`/bot-config/tokens/${nonExistentAddress}/invested-eth`))
+        .send({
+          investedEth: '1000000000000000000',
+        })
+      expect(res).toBe404()
+    })
+  })
 })

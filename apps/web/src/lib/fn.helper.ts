@@ -1,5 +1,22 @@
 import { FixedNumber } from 'ethers'
 
+export function formatOnchain(props: {
+  value?: bigint
+  decimals?: number
+  maxFractionDigits?: number
+  minFractionDigits?: number
+}) {
+  const { maxFractionDigits = 5, minFractionDigits = 0, decimals = 18, value = 0n } = props
+  const fxN = fnHelper.fromDecimals(value, decimals)
+  const intl = new Intl.NumberFormat('en-US', {
+    maximumFractionDigits: maxFractionDigits,
+    minimumFractionDigits: minFractionDigits,
+    notation: 'compact',
+    compactDisplay: 'short',
+  })
+  return intl.format(fxN.toUnsafeFloat())
+}
+
 /**
  * Safe from function, return 0 if error
  * @notice decimals for BigNumber only

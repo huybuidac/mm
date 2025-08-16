@@ -126,6 +126,7 @@ model BotToken {
 
   chainId String
   fee     Int @default(500)
+  investedEth Decimal @db.Decimal(30, 0) @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

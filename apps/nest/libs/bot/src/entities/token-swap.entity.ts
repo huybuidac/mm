@@ -61,4 +61,4 @@ export class TokenSwapEntity {
   @ApiProperty()
   @Expose()
   tick: number
-} 
+}

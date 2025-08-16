@@ -1,9 +1,10 @@
 import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common'
-import { ApiBearerAuth, ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { JwtGuard } from '@app/auth/guards/jwt.guard'
 import { BotConfigService } from '../services/bot-config.service'
 import { CreateBotTokenDto } from '../dtos/create-bot-token.dto'
 import { CreateBotTokenWalletsDto } from '../dtos/create-bot-token-wallets.dto'
+import { UpdateTokenInvestedEthDto } from '../dtos/update-token-invested-eth.dto'
 import { BotTokenEntity } from '../entities/bot-token.entity'
 import { BotTokenWalletEntity } from '../entities/bot-token-wallet.entity'
 
@@ -19,6 +20,27 @@ export class BotConfigController {
   @UseGuards(JwtGuard)
   getAllTokens() {
     return this.botConfigService.getAllTokens()
+  }
+
+  @Get('tokens/:address')
+  @ApiOperation({ summary: 'Get a token by address' })
+  @ApiBearerAuth()
+  @ApiCreatedResponse({ type: () => BotTokenEntity })
+  @UseGuards(JwtGuard)
+  getToken(@Param('address') address: string) {
+    return this.botConfigService.getToken(address)
+  }
+
+  @Patch('tokens/:address/invested-eth')
+  @ApiOperation({ summary: 'Update token invested ETH' })
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: () => BotTokenEntity })
+  @UseGuards(JwtGuard)
+  updateTokenInvestedEth(
+    @Param('address') address: string,
+    @Body() updateTokenInvestedEthDto: UpdateTokenInvestedEthDto,
+  ) {
+    return this.botConfigService.updateTokenInvestedEth(address, updateTokenInvestedEthDto.investedEth)
   }
 
   @Patch('tokens/:address/toggle-enabled')
